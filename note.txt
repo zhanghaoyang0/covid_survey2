@@ -1,1 +1,10 @@
 # 11月11日（二十条发布），12月7日 （十条发布）
+# our hospital implement: 1210
+# staff: 12.19开始愿检尽检的
+
+
+
+doc id of inpat/outpat and staff are not consistent
+
+1119 Sat to 1210 Sat, 3 weeks
+1210 Sat to 1231 Sat, 3 weeks

@@ -2,12 +2,13 @@
 #====================================================================
 # load packages and defind functions
 #====================================================================
-libs = c('dplyr', 'openxlsx', 'stringr', 'ggplot2', 'ggsci', 'ggpubr')
-lapply(libs, require, character.only = TRUE) 
+libs = c('dplyr', 'openxlsx', 'stringr', 'pracma', 'xts', 'ggplot2', 'ggsci', 'ggpubr', 'scales')
+lapply(libs, require, character.only = TRUE)
 options(stringsAsFactors=F)
 
 # study period
 days = seq(as.Date('2022/11/01'), by = "day", length.out = 61)
+adjust_day = as.Date('2022-12-10')
 
 # get items with matched pattern
 # e.g, get('a', c('a1', 'a', 'c'))
@@ -79,8 +80,31 @@ clean_PRES_ILLN = function(col){
     return(epi)
 }
 
+# find top disease, e.g., find_topDis(inpat, 'PAT_DIA_NAME', 11)
+clean_dis = function(vec){
+    vec = gsub('急性|慢性', '', vec)
+    vec[grepl('肺炎', vec)] = '肺炎'; vec[grepl('支气管炎', vec)] = '支气管炎'; vec[grepl('上呼吸道感染', vec)] = '上呼吸道感染'
+    vec[grepl('化学治疗|健康查体|咨询', vec)] = 'other' # drop this 
+    return(vec)
+}
+
+find_topDis = function(vec, topn){
+    vec = sort(table(vec), decreasing=T)[1:topn]
+    cbind(names(vec[1:topn]))
+    return(t(t(vec)))
+}
+
+chn_to_eng = function(vec, dict, notFoundAsOther=T){
+    for (i in 1:nrow(dict)){
+        key = dict[i, 'key']; val = dict[i, 'value']
+        vec[vec==key] = val
+    }
+    if (notFoundAsOther==T){vec[!vec%in%dict$value] = 'Other'}
+    return(vec)
+}
 
 
+ 
 ## get duplicate value, e.g, get_dup(c(1,2,1,NA,NA))
 get_dup = function(x, keepNA=F){
     x = x[duplicated(x)]
@@ -90,48 +114,36 @@ get_dup = function(x, keepNA=F){
 
 
 
-
 #====================================================================
 # for nvist
 #====================================================================
-# get number of visit by group
-get_nvisit_bygroup = function(df, date_col, group_col, dates, groups){
-    out = c()
-    for (day in dates){
-        sub = df[df[,date_col] == day,]
-        for (group in groups){
-            if (group=='All'){num = nrow(sub)}
-            else if (group=='Other'){num = sum(!sub[,group_col]%in%groups)}
-            else if (group=='COVID positive'){num = sum(sub$epi=='posi')}
-            else if (group=='COVID contact history'){num = sum(sub$epi=='contact_posi')}
-            else {num = sum(sub[,group_col]==group)}
-            out = c(out, day, group, num)
-        }
-    }
-    nvisit = data.frame(matrix(out, ncol=3, byrow=T))%>%rename(day=X1, group=X2, num=X3)%>%
-        mutate_if(is_numeric,as.numeric)%>%mutate(day=as.Date(day,origin="1970-01-01"))
-    return(nvisit)
-}
+
+
 # plot ts
-plot_nvist = function(df, groups){
-    plots = list()
-    for (i in 1:length(groups)){
-        group = groups[[i]]
-        df_p = df%>%filter(group%in%groups[[i]])
-        ymax = ceiling(max(df_p$num)/100)*120
-        df_text = df_p%>%filter(day==as.Date('2022-12-07'))%>%filter(num==max(num))%>%unique()%>%mutate(num=ymax*0.9)
-        p = ggplot(df_p, aes(x=day, y=num, group=group)) +
-            geom_point(aes(color=group)) + geom_line(aes(color=group)) + 
-            geom_vline(xintercept=as.Date('2022-12-07'), linetype='dashed', color='blue', size=1.5) +        
-            labs(x=("Date"), y=("Number of patients")) + ylim(0, ymax) +
-            scale_x_date(date_breaks = "weeks" , date_labels = "%m-%d") +
-            geom_text(data=df_text, label="After adjustment \nof zero-COVID policy*", vjust=0, hjust=-0.1, size=3) +
-            theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, color="black"))+
-            theme(legend.title=element_blank()) +
-            scale_fill_nejm()
-        plots[[i]] = p
-    }
-    return(plots)
+# covid pat appear after 1210
+
+# title1 = bquote(italic("N")['handled inpatient']~' per week')
+
+#====================================================================
+# prop of dis
+#====================================================================
+
+
+
+
+
+plot_disPie = function(df, policy_, title){
+    df_p = df%>%filter(policy==policy_)
+    df_p = df_p%>%mutate(ypos = cumsum(prop)- 0.5*prop)
+    p = ggplot(df_p, aes(x="", y=prop, fill=dis)) +
+        geom_bar(stat="identity", width=1, color="white") +
+        coord_polar("y", start=0) +
+        theme_void() + 
+        ggtitle(title) +
+        geom_text(aes(x = 1.6, label = scales::percent(prop, accuracy = .1)), position = position_stack(vjust = 0.5), size=3) +
+        guides(fill=guide_legend(title="Disease", ncol = 2)) + # legend row
+        scale_fill_nejm()
+    return(p)
 }
 
 
@@ -146,3 +158,8 @@ fix_date = function(x){
     out = as.Date(out, format="%Y.%m.%d")
     return(out)
 }
+
+
+#====================================================================
+# for analysis
+#====================================================================
