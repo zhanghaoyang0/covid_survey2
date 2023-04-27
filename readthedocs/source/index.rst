@@ -7,7 +7,7 @@ People raised concerns about potential healthcare system overload due to surging
 
 We performed this study to evaluate the impact on such a policy adjustment on pediatric healthcare services. 
 
-The data and anaysis procedure are available at below.
+We wrote a manuscript, our data and anaysis procedure are available at below.
 
 
 
