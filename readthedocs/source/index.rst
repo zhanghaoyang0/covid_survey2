@@ -10,7 +10,7 @@ We used EMR data from affilicated children's hosptial of Jiangnan University, to
 The data and anaysis procedure are available at below.
 
 
-Policy adjustment
+Healthcare activity
 =============================================
 
 .. image:: fig1.png
@@ -23,117 +23,127 @@ Healthcare activity before and after are summrized in the figure.
 
 
 
-
-Healthcare before and after policy adjustment
-=============================================
-
-
 Data
-=======================
-This study was conducted using EMR from Nov 2022 to Dec 2022 of patients who attended our hospital.
+=============================================
+This study was conducted using EMR of our hospital, from Nov 2022 to Dec 2022 of patients who attended our hospital.
 
-Both attendance records for outpatient and inpatient, and date of healthcare provider on COVID leave were extracted.
+Meterological varaitions were also acquired and provided.  
 
-To account for meterological varaitions, we also acquired daily average temperature and daily relative humidity of Wuxi from National Meteorological Information Centre.  
-
-The data is rdata. Please see our code about how to use it.  
-
+All personal information data are masked.
 
 You can download the data at `https://github.com/zhanghaoyang0/covid_survey2/blob/main/data/data.rdata`_.
 
+Note that the data is rdata. Please see our code about how to use it.  
+
+
 
 Analysis: preparation
-=======================
-We used R 4.0.3 for analysis.
-
-Load packages:
-
-.. code-block:: python
-
-   libs = c('openxlsx', 'stringr', 'dplyr', 'stringi', 'R.utils', 'ggplot2', 'ggpubr', 'ggsci', 'mapchina', 'sf', 'data.table','NbClust', 'igraph', 'factoextra')
-   lapply(libs, require, character.only = TRUE) 
-   options(stringsAsFactors=F)
-   sf::sf_use_s2(FALSE)
-   
-
-Define functions:
-
-.. code-block:: python
-
-   # calculate proportion of a given var for all, male, female participants
-   # e.g, 
-   # temp = data.frame(sex=c('Male', 'Female'), var=c(1, 0))
-   # get_prop(temp, 'var')
-   get_prop = function(df, var){
-      for (sex1 in c('Male|Female', 'Male', 'Female')){
-         df1 = df%>%filter(grepl(sex1, sex))
-         tab = table(df1[,var])
-         frq = data.frame(var=names(tab), n=as.numeric(tab))
-         frq = frq%>%mutate(n=paste0(n,'(', sprintf('%.2f', n*100/sum(tab)),'%)'))
-         print(paste0('distribution of ', ifelse(sex1=='Male|Female', 'all', tolower(sex1)), ' participants in ', var, ':'))
-         print(frq)
-      }
-   }
-   # convert character vector to numeric 
-   # e.g, df = df%>%mutate_if(is_numeric,as.numeric)
-   is_numeric <- function(x) {
-      !any(is.na(suppressWarnings(as.numeric(na.omit(x))))) & is.character(x)
-   }
-
-
-Analysis: data cleaning and description
 =============================================
-We conducted data cleaning by translating Chinese to English, combining groups with small samples, etc.
-Description was also performed.
-
-You may clone our repository, which contains our data, results, and plots: 
+clone our repository, which contains our data, codes, and plots:
 
 .. code-block:: python
 
-   git clone https://github.com/zhanghaoyang0/covid_survey.git
-   cd covid_survey
+   git clone https://github.com/zhanghaoyang0/covid_survey2.git
+   cd covid_survey2
+   R
 
-Or you can just download our data and performed the below analysis. If you do so, pleasue change the path in the code. 
 
-Load data and clean:
+start R, load data and functions:
 
 .. code-block:: python
 
-   ## questionaire data
-   df = read.xlsx('data/covid_survey_20230112.xlsx', sheet=1) # questionaire
-   names(df) = gsub('/|，|？|“|”', '', names(df)) # remove Chinese punctuations
-   names(df) = gsub('?', '', names(df), fixed=T) 
-   names(df) = str_replace(names(df), '在感染后是否有出现以下[\U4E00-\U9FFF\U3000-\U303F]+症状:', '')
-   names(df) = str_replace(names(df), '[（][\U4E00-\U9FFF\U3000-\U303F|1-9]+[）]', '')
-   ## drop unused items and atypical symptons
-   drop_cols = c('提交时间', '答题时间', '喉咙有刀割感', '吞咽时疼痛', '喉咙嘶哑', '喉咙干痒', '性欲减退', '生理期异常', '肾脏部位疼痛', '流泪', '打喷嚏')
-   df[,drop_cols] = NULL # drop atypical symptons
-   names(df)
-   ## replace chinese with english
-   dict1 = read.xlsx('data/covid_survey_20230112.xlsx', sheet=2)
-   dict2 = read.xlsx('data/covid_survey_20230112.xlsx', sheet=3)
-   dict = rbind(dict1, dict2[,c(1,4)])
-   print('chinese items to english:')
-   print(head(dict))
-   for (i in 1:nrow(dict)){
-      names(df)[names(df)==dict[i, 1]] = dict[i, 2]
+   source('./code/prepare.r')
+   datas = load('data/data.rdata')
+   datas
+
+
+Analysis: patient characteris
+=============================================
+filter data to the period (two weeks around policy adjustment):
+
+.. code-block:: python
+
+   filter_period = function(df, nweek=2){
+      out = df%>%filter(DT>=(adjust_day-nweek*7)&DT<(adjust_day+nweek*7))%>%
+               mutate(policy = ifelse(DT >= adjust_day, 'After', 'Before'))%>%
+               mutate(policy = factor(policy, levels=c('Before', 'After')))
+      return(out)
    }
+
+   outpat1 = filter_period(outpat)
+   inpat1 = filter_period(inpat)
    
 
-Age and sex:
+Characteristics of patients:
 
 .. code-block:: python
 
-   df = df%>%mutate(age=gsub('岁', '', age))%>%
-      mutate(age=ifelse(age%in%c('41-50', '51-60', '61-70'), '>40', age))%>%
-      mutate(age=ifelse(age%in%c('12-18',  '18-24', '6-12', '3-6'), '<24', age))%>%
-      mutate(age=factor(age, levels=c('<24', '24-30', '31-40', '>40')))
-   df = df%>%mutate(sex=factor(ifelse(sex=='女','Female', 'Male'), levels=c('Female', 'Male')))
-   table(df$sex)
-   get_prop(df, 'sex', 'age')
+   des_popChara = function(df){
+      out = c()
+      for (nweek in c(-2:1, 9)){ # 9 mean full range
+         if (nweek==9){start = adjust_day-2*7; end = adjust_day+(1+1)*7} else 
+               {start = adjust_day+nweek*7; end = adjust_day+(nweek+1)*7}
+         sub = df%>%filter(DT>=start&DT<end)
+         n = nrow(sub)
+         range = paste0(start, ' to ', end-1)
+         age = sprintf('%.2f ± %.2f', mean(sub$age), sd(sub$age))
+         n_male = table(sub$SEX)[2]
+         n = sprintf('%.0f (%.2f%%)', n, 100*n_male/n)
+         out = c(out, range, n, age)
+      }
+      out = data.frame(matrix(out, ncol=3, byrow=T))
+      names(out) = c('range', 'n(male%)', 'age')
+      return(out)
+   }
+
+   des_popChara(outpat)
+   des_popChara(inpat)
 
 
-Disease duration:
+you will see:
+
+.. code-block:: python
+
+                           range       n(male%)         age
+   1 2022-11-26 to 2022-12-02 21848 (55.90%) 5.39 ± 3.71
+   2 2022-12-03 to 2022-12-09 21979 (55.87%) 5.47 ± 3.77
+   3 2022-12-10 to 2022-12-16 17498 (55.02%) 5.73 ± 3.99
+   4 2022-12-17 to 2022-12-23 13946 (56.09%) 4.72 ± 4.20
+   5 2022-11-26 to 2022-12-23 75271 (55.72%) 5.37 ± 3.90
+                        range      n(male%)         age
+   1 2022-11-26 to 2022-12-02  479 (55.32%) 5.32 ± 3.79
+   2 2022-12-03 to 2022-12-09  453 (55.41%) 5.36 ± 3.90
+   3 2022-12-10 to 2022-12-16  330 (53.94%) 5.15 ± 3.94
+   4 2022-12-17 to 2022-12-23  244 (60.25%) 4.05 ± 4.49
+   5 2022-11-26 to 2022-12-23 1506 (55.84%) 5.09 ± 4.00
+
+
+.. code-block:: python
+
+   compare_ageSex = function(df, start, end){
+      sub = df%>%filter(DT>=as.Date('2022-11-26')&DT<as.Date('2022-12-23'))
+      sub1 = sub%>%mutate(group = ifelse(DT>=start&DT<end, 1, 2))
+      t = t.test(sub1%>%filter(group==1)%>%pull(age), sub1%>%filter(group==2)%>%pull(age))
+      chi = chisq.test(sub1$SEX, sub1$group)
+      print(sprintf('t test for age: t = %.2f, p = %.2f', t$statistic, t$p.value))
+      print(sprintf('chisquare test for sex: chi = %.2f, p = %.2f', chi$statistic, chi$p.value))
+   }
+
+   compare_ageSex(outpat, start = as.Date('2022-12-17'), end = as.Date('2022-12-23'))
+   compare_ageSex(inpat, start = as.Date('2022-12-17'), end = as.Date('2022-12-23'))
+
+
+you will see:
+.. code-block:: python
+
+   [1] "t test for age: t = -15.57, p = 0.00"
+   [1] "chisquare test for sex: chi = 1.71, p = 0.19"
+   [1] "t test for age: t = -3.54, p = 0.00"
+   [1] "chisquare test for sex: chi = 1.62, p = 0.20"
+
+
+
+
 
 .. code-block:: python
 
@@ -499,6 +509,48 @@ We used regression to measure the association between symptoms and population ch
       }
    }
    res1
+
+
+
+Analysis: preparation
+=======================
+We used R 4.0.3 for analysis.
+
+Load packages:
+
+.. code-block:: python
+
+   libs = c('openxlsx', 'stringr', 'dplyr', 'stringi', 'R.utils', 'ggplot2', 'ggpubr', 'ggsci', 'mapchina', 'sf', 'data.table','NbClust', 'igraph', 'factoextra')
+   lapply(libs, require, character.only = TRUE) 
+   options(stringsAsFactors=F)
+   sf::sf_use_s2(FALSE)
+   
+
+Define functions:
+
+.. code-block:: python
+
+   # calculate proportion of a given var for all, male, female participants
+   # e.g, 
+   # temp = data.frame(sex=c('Male', 'Female'), var=c(1, 0))
+   # get_prop(temp, 'var')
+   get_prop = function(df, var){
+      for (sex1 in c('Male|Female', 'Male', 'Female')){
+         df1 = df%>%filter(grepl(sex1, sex))
+         tab = table(df1[,var])
+         frq = data.frame(var=names(tab), n=as.numeric(tab))
+         frq = frq%>%mutate(n=paste0(n,'(', sprintf('%.2f', n*100/sum(tab)),'%)'))
+         print(paste0('distribution of ', ifelse(sex1=='Male|Female', 'all', tolower(sex1)), ' participants in ', var, ':'))
+         print(frq)
+      }
+   }
+   # convert character vector to numeric 
+   # e.g, df = df%>%mutate_if(is_numeric,as.numeric)
+   is_numeric <- function(x) {
+      !any(is.na(suppressWarnings(as.numeric(na.omit(x))))) & is.character(x)
+   }
+
+
 
 Comments and feedbacks
 =======================
