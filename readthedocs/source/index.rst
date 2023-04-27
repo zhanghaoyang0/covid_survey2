@@ -663,12 +663,12 @@ Compare workload of healthcare provider:
    # 12 Respiratory / Infectious PRIMARY_NUR 18.00 ± 15.39 11.10 ± 16.17 0.890835661872633    0.388630575431416
 
 
-
 Comments and feedbacks
 =======================
 
-Feel free to contact me via zhanghaoyang0@hotmail.com
-You may star the project at `here <https://github.com/zhanghaoyang0/covid_survey2>`.
+Feel free to contact me via zhanghaoyang0@hotmail.com.   
+
+You may star the project at https://github.com/zhanghaoyang0/covid_survey2.
 
 .. image:: dogwithhat.png
    :width: 200
