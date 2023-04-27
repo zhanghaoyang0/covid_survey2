@@ -666,9 +666,9 @@ Compare workload of healthcare provider:
 Comments and feedbacks
 =======================
 
-Feel free to contact me via zhanghaoyang0@hotmail.com.   
+Feel free to contact me via zhanghaoyang0@hotmail.com.  
 
-You may star the project at https://github.com/zhanghaoyang0/covid_survey2.
+You may star the project at https://github.com/zhanghaoyang0/covid_survey2.  
 
 .. image:: dogwithhat.png
    :width: 200

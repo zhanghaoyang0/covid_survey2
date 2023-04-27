@@ -8,6 +8,7 @@ R
 source('./code/prepare.r')
 datas = load('data/data.rdata')
 datas
+options(width=150)
 
 #====================================================================
 # filter
@@ -372,38 +373,6 @@ compare_workload = function(df, col, name){
     return(stat)
 }
 
-# plot_workload = function(df, y_max, ylab_text){
-#     p = ggplot(df, aes(x = name, y = n, fill = policy)) +
-#         geom_boxplot(outlier.shape = NA) +
-#         ylab(ylab_text) + xlab('') + 
-#         ylim(0, y_max) +
-#         theme_bw() +
-#         theme(axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5, color="black"), axis.title.y = element_text(size = 10), 
-#             panel.grid.major=element_blank(),panel.grid.minor=element_blank(), # remove grid
-#             legend.title=element_blank()) +
-#         scale_fill_nejm()
-#     return(p)
-# }
-
-
-# df1 = cal_workload(outpat1, 'DOC_NAME', 'Doctor')
-# sub1 = cal_workload(inpat1, 'HPHY_NAME', 'Doctor')
-# sub2 = cal_workload(inpat1, 'OP_DOC_NAME', 'Surgery doctor')
-# sub3 = cal_workload(inpat1, 'PRIMARY_NUR', 'Nurse')
-# df2 = rbind(sub1, sub2, sub3)%>%mutate(policy=factor(policy, levels=c('Before', 'After')))
-
-
-# ylab = bquote('Number of patients handled per week')
-# p1 = plot_workload(df1, y_max=300, ylab)
-# p2 = plot_workload(df2, y_max=40, ylab)
-
-# png('./plot/work_load1.png',height=600, width=500, res=150)
-# print(p1)
-# dev.off()
-
-# png('./plot/work_load2.png',height=600, width=900, res=150)
-# print(p)
-# dev.off()
 dpts = c('all', 'other', 'Respiratory / Infectious')
 compare = data.frame()
 for (dpt in dpts){
