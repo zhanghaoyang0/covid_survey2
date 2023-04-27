@@ -57,7 +57,7 @@ start R, load data and functions:
    datas
 
 
-Patient characteris
+Patient characteristics
 =============================================
 filter data to the period (two weeks around policy adjustment):
 
@@ -112,7 +112,7 @@ characteristics of patients:
    .. 5 2022-11-26 to 2022-12-23 1506 (55.84%) 5.09 ± 4.00
 
 
-compare characteristics:
+compare:
 
 .. code-block:: python
 
@@ -127,15 +127,22 @@ compare characteristics:
 
    compare_ageSex(outpat, start = as.Date('2022-12-17'), end = as.Date('2022-12-23'))
    compare_ageSex(inpat, start = as.Date('2022-12-17'), end = as.Date('2022-12-23'))
-   .. [1] "t test for age: t = -15.57, p = 0.00"
+   # [1] "t test for age: t = -15.57, p = 0.00"
    .. [1] "chisquare test for sex: chi = 1.71, p = 0.19"
    .. [1] "t test for age: t = -3.54, p = 0.00"
    .. [1] "chisquare test for sex: chi = 1.62, p = 0.20"
 
 
-Analysis: patient characteris
+
+
+
+Time series of hosptial activity
 =============================================
 
+.. image:: fig2.png
+   :width: 600
+   :align: center
+   
 
 daily number of patient visit:
 .. code-block:: python
@@ -172,6 +179,7 @@ daily number of patient visit:
 
 
 daily number of healthcare provider on covid leave:
+
 .. code-block:: python
 
    out = c()
@@ -187,6 +195,7 @@ daily number of healthcare provider on covid leave:
 
 
 reshape data:
+
 .. code-block:: python
    nvisit_outpat1 = reshape(nvisit_outpat, idvar = "DT", timevar = "group", direction = "wide")
    nposi_outpat1 = reshape(nposi_outpat, idvar = "DT", timevar = "group", direction = "wide")
@@ -340,9 +349,7 @@ Analysis: clustering of symptoms
 
 Dendrogram for sympytoms clustering: 
 
-.. image:: fig2.png
-   :width: 600
-   :align: center
+
 
 .. code-block:: python
 
