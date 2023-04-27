@@ -18,6 +18,7 @@ Adjustment of healthcare activity
    :align: center
 
 After policy adjustment:
+
 - COVID-19 testing is not a necessary for patients and healthcare providers.
 - Designation of COVID-19 hospitals were canceled.
 
