@@ -3,22 +3,44 @@ Overview
 =============================================
 In Dec 2022, the COVID-19 restriction was end.
 
-We conducted a 3-week on-line survey to measure the characteristics to measure the characteristics of COVID-19 patients in China. 
+People raised concerns about potential healthcare system overload due to surging case loads.
 
-We investigated the symptom spectrum of COVID-19 in the participants, and, evaluated if the association between COVID-19 symptoms and population characteristics, vaccination, and medication.
+We used EMR data from affilicated children's hosptial of Jiangnan University, to evaluate the impact on such a policy adjustment on our pediatric healthcare services. 
 
 The data and anaysis procedure are available at below.
 
-Questionnaire Data
+
+Policy adjustment
+=============================================
+
+.. image:: fig1.png
+   :width: 600
+   :align: center
+
+China made significant policy changes with "10 measures" (released in Dec 7th and implemented in Dec 10th), which relaxed some of the strict testing requirements for healthcare services.
+
+Healthcare activity before and after are summrized in the figure.
+
+
+
+
+Healthcare before and after policy adjustment
+=============================================
+
+
+Data
 =======================
-The questionnaire was open for around 3 weeks, from 22th Dec 2022 to 17th Jan 2023.
+This study was conducted using EMR from Nov 2022 to Dec 2022 of patients who attended our hospital.
 
-552 questionnaires were collected.  
+Both attendance records for outpatient and inpatient, and date of healthcare provider on COVID leave were extracted.
 
-The data is in Chinese. Please see our code about how to clean this data.  
+To account for meterological varaitions, we also acquired daily average temperature and daily relative humidity of Wuxi from National Meteorological Information Centre.  
+
+The data is rdata. Please see our code about how to use it.  
 
 
-You can download the data at `here <https://github.com/zhanghaoyang0/covid_survey/raw/master/data/covid_survey_20230112.xlsx>`_.
+You can download the data at `https://github.com/zhanghaoyang0/covid_survey2/blob/main/data/data.rdata`_.
+
 
 Analysis: preparation
 =======================
