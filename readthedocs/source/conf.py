@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'covid_survey'
+project = 'covid_survey2'
 copyright = '2023, zhanghaoyang0'
 author = 'zhanghaoyang0'
 
