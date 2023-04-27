@@ -5,7 +5,7 @@ In Dec 2022, the COVID-19 restriction was end.
 
 People raised concerns about potential healthcare system overload due to surging case loads.
 
-We used EMR data from affilicated children's hosptial of Jiangnan University, to evaluate the impact on such a policy adjustment on our pediatric healthcare services. 
+We performed this study to evaluate the impact on such a policy adjustment on pediatric healthcare services. 
 
 The data and anaysis procedure are available at below.
 
@@ -17,13 +17,15 @@ Adjustment of healthcare activity
    :width: 600
    :align: center
 
-After policy adjustment, COVID-19 testing is not a necessary for patients and healthcare provider, and the designation of COVID-19 hospitals were canceled. 
+After policy adjustment:
+- COVID-19 testing is not a necessary for patients and healthcare providers.
+- Designation of COVID-19 hospitals were canceled.
 
 
 
 Data source and study population
 =============================================
-This study was conducted using EMR of our hospital, from Nov 2022 to Dec 2022 of patients who attended our hospital.
+This study was conducted using EMR of affilicated children's hosptial of Jiangnan Universit, from Nov 2022 to Dec 2022.
 
 Meterological varaitions were also acquired.  
 
