@@ -329,7 +329,7 @@ Plot:
 
 Visiting reason and hospitalization fee
 =============================================
-.. image:: fig2.png
+.. image:: fig3.png
    :width: 600
    :align: center
 
