@@ -32,7 +32,7 @@ Meterological varaitions were also acquired.
 
 All personal information data are masked.
 
-You can download the data at `https://github.com/zhanghaoyang0/covid_survey2/blob/main/data/data.rdata`.
+You can download the data at `here <https://github.com/zhanghaoyang0/covid_survey2/blob/main/data/data.rdata>`.
 
 Note that the data is rdata. Please see our code about how to use it.  
 
