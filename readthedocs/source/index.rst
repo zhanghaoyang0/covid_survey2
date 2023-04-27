@@ -280,7 +280,7 @@ Compare patient visit before and after policy adjustment:
    # 3  inpat Respiratory / Infectious 18.00 ± 3.82  15.86 ± 6.27  -3.57 ± 2.46 0.16
 
 
-Plot:
+Plot time series:
 
 .. code-block:: python
       
@@ -424,6 +424,7 @@ Compare visiting reason:
 Measure hosptialization fee:
 
 .. code-block:: python
+
    # recode fee col
    inpat_fee2 = inpat1%>%mutate(DPT_NAME=ifelse(DPT_NAME=='Respiratory / Infectious', 'Respiratory / Infectious', 'Other'))
    fee_cols = get('FEE', names(inpat1))
@@ -498,6 +499,7 @@ Measure hosptialization fee:
 Compare hosptialization fee and length:
 
 .. code-block:: python
+
    dpts = c('Total', "Gastroenterology", "Neonatology", "Neurology", "Nephropathy", "Cardiology", "Respiratory / Infectious") # dpt with patients > 100
    inpat2 = rbind(inpat1, inpat1%>%mutate(DPT_NAME='Total')) # double df to add total
    inpat2 = inpat2%>%mutate(DPT_NAME = ifelse(DPT_NAME%in%dpts, DPT_NAME, 'Other'))
