@@ -164,6 +164,7 @@ Time series of hosptial activity
    :align: center
 
 Patient visit:
+
 .. code-block:: python
 
   get_nvisit_bygroup = function(df, date_col, group_col, dates, groups){
@@ -192,7 +193,6 @@ Patient visit:
    nvisit_outpat = get_nvisit_bygroup(outpat, 'DT', 'DPT_NAME', days, groups1)
    nposi_outpat = get_nvisit_bygroup(outpat, 'DT', 'epi', days, groups2)
    nvisit_inpat = get_nvisit_bygroup(inpat, 'DT', 'DPT_NAME', days, groups3)
-
 
 Healthcare provider on covid leave:
 
@@ -648,19 +648,19 @@ Compare workload of healthcare provider:
    }
    row.names(compare) = NULL
    compare
-                           dpt         var   mean_before    mean_after                 t                    p
-1                       all    DOC_NAME 89.08 ± 81.07 63.91 ± 74.74  3.58012224895312 0.000377886431007281
-2                       all   HPHY_NAME   6.21 ± 6.76   4.42 ± 5.19  1.77733084958176   0.0777478951499102
-3                       all OP_DOC_NAME   2.18 ± 2.01   1.40 ± 1.08  2.43871012921105    0.016690976651954
-4                       all PRIMARY_NUR 15.03 ± 12.59 10.63 ± 11.04  1.41884238570103    0.161487382188313
-5                     other    DOC_NAME 82.53 ± 77.44 58.35 ± 68.87  3.64482159126027  0.00029676006040416
-6                     other   HPHY_NAME   5.23 ± 5.11   3.09 ± 3.09  2.84203999269058    0.005366639848032
-7                     other OP_DOC_NAME   2.12 ± 2.05   1.55 ± 1.10  1.68328116994069   0.0959921935710756
-8                     other PRIMARY_NUR 13.60 ± 11.93   6.77 ± 6.42  2.53142005076924   0.0158020845226612
-9  Respiratory / Infectious    DOC_NAME 33.21 ± 45.19 29.09 ± 34.63 0.519404051621519    0.604703796031815
-10 Respiratory / Infectious   HPHY_NAME 11.45 ± 11.65   5.55 ± 7.36  1.52154594149346    0.149619274720804
-11 Respiratory / Infectious OP_DOC_NAME   2.00 ± 0.91   0.50 ± 0.00    3.286335345031   0.0462050913533633
-12 Respiratory / Infectious PRIMARY_NUR 18.00 ± 15.39 11.10 ± 16.17 0.890835661872633    0.388630575431416
+   #                           dpt         var   mean_before    mean_after                 t                    p
+   # 1                       all    DOC_NAME 89.08 ± 81.07 63.91 ± 74.74  3.58012224895312 0.000377886431007281
+   # 2                       all   HPHY_NAME   6.21 ± 6.76   4.42 ± 5.19  1.77733084958176   0.0777478951499102
+   # 3                       all OP_DOC_NAME   2.18 ± 2.01   1.40 ± 1.08  2.43871012921105    0.016690976651954
+   # 4                       all PRIMARY_NUR 15.03 ± 12.59 10.63 ± 11.04  1.41884238570103    0.161487382188313
+   # 5                     other    DOC_NAME 82.53 ± 77.44 58.35 ± 68.87  3.64482159126027  0.00029676006040416
+   # 6                     other   HPHY_NAME   5.23 ± 5.11   3.09 ± 3.09  2.84203999269058    0.005366639848032
+   # 7                     other OP_DOC_NAME   2.12 ± 2.05   1.55 ± 1.10  1.68328116994069   0.0959921935710756
+   # 8                     other PRIMARY_NUR 13.60 ± 11.93   6.77 ± 6.42  2.53142005076924   0.0158020845226612
+   # 9  Respiratory / Infectious    DOC_NAME 33.21 ± 45.19 29.09 ± 34.63 0.519404051621519    0.604703796031815
+   # 10 Respiratory / Infectious   HPHY_NAME 11.45 ± 11.65   5.55 ± 7.36  1.52154594149346    0.149619274720804
+   # 11 Respiratory / Infectious OP_DOC_NAME   2.00 ± 0.91   0.50 ± 0.00    3.286335345031   0.0462050913533633
+   # 12 Respiratory / Infectious PRIMARY_NUR 18.00 ± 15.39 11.10 ± 16.17 0.890835661872633    0.388630575431416
 
 
 
@@ -668,6 +668,7 @@ Comments and feedbacks
 =======================
 
 Feel free to contact me via zhanghaoyang0@hotmail.com
+If you feel it helpful, you may start the `project <https://github.com/zhanghaoyang0/covid_survey2>`
 
 .. image:: dogwithhat.png
    :width: 200
