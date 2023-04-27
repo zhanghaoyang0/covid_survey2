@@ -31,7 +31,7 @@ Meterological varaitions were also acquired and provided.
 
 All personal information data are masked.
 
-You can download the data at `https://github.com/zhanghaoyang0/covid_survey2/blob/main/data/data.rdata`_.
+You can download the data at `https://github.com/zhanghaoyang0/covid_survey2/blob/main/data/data.rdata`.
 
 Note that the data is rdata. Please see our code about how to use it.  
 
@@ -45,19 +45,19 @@ clone our repository, which contains our data, codes, and plots:
 
    git clone https://github.com/zhanghaoyang0/covid_survey2.git
    cd covid_survey2
-   R
 
 
 start R, load data and functions:
 
 .. code-block:: python
 
+   R
    source('./code/prepare.r')
    datas = load('data/data.rdata')
    datas
 
 
-Analysis: patient characteris
+Patient characteris
 =============================================
 filter data to the period (two weeks around policy adjustment):
 
@@ -74,7 +74,7 @@ filter data to the period (two weeks around policy adjustment):
    inpat1 = filter_period(inpat)
    
 
-Characteristics of patients:
+characteristics of patients:
 
 .. code-block:: python
 
@@ -97,26 +97,22 @@ Characteristics of patients:
    }
 
    des_popChara(outpat)
+   ..                         range       n(male%)         age 
+   .. 1 2022-11-26 to 2022-12-02 21848 (55.90%) 5.39 ± 3.71
+   .. 2 2022-12-03 to 2022-12-09 21979 (55.87%) 5.47 ± 3.77
+   .. 3 2022-12-10 to 2022-12-16 17498 (55.02%) 5.73 ± 3.99
+   .. 4 2022-12-17 to 2022-12-23 13946 (56.09%) 4.72 ± 4.20
+   .. 5 2022-11-26 to 2022-12-23 75271 (55.72%) 5.37 ± 3.90
    des_popChara(inpat)
+   ..                         range      n(male%)         age
+   .. 1 2022-11-26 to 2022-12-02  479 (55.32%) 5.32 ± 3.79
+   .. 2 2022-12-03 to 2022-12-09  453 (55.41%) 5.36 ± 3.90
+   .. 3 2022-12-10 to 2022-12-16  330 (53.94%) 5.15 ± 3.94
+   .. 4 2022-12-17 to 2022-12-23  244 (60.25%) 4.05 ± 4.49
+   .. 5 2022-11-26 to 2022-12-23 1506 (55.84%) 5.09 ± 4.00
 
 
-you will see:
-
-.. code-block:: python
-
-                           range       n(male%)         age
-   1 2022-11-26 to 2022-12-02 21848 (55.90%) 5.39 ± 3.71
-   2 2022-12-03 to 2022-12-09 21979 (55.87%) 5.47 ± 3.77
-   3 2022-12-10 to 2022-12-16 17498 (55.02%) 5.73 ± 3.99
-   4 2022-12-17 to 2022-12-23 13946 (56.09%) 4.72 ± 4.20
-   5 2022-11-26 to 2022-12-23 75271 (55.72%) 5.37 ± 3.90
-                        range      n(male%)         age
-   1 2022-11-26 to 2022-12-02  479 (55.32%) 5.32 ± 3.79
-   2 2022-12-03 to 2022-12-09  453 (55.41%) 5.36 ± 3.90
-   3 2022-12-10 to 2022-12-16  330 (53.94%) 5.15 ± 3.94
-   4 2022-12-17 to 2022-12-23  244 (60.25%) 4.05 ± 4.49
-   5 2022-11-26 to 2022-12-23 1506 (55.84%) 5.09 ± 4.00
-
+compare characteristics:
 
 .. code-block:: python
 
@@ -131,56 +127,79 @@ you will see:
 
    compare_ageSex(outpat, start = as.Date('2022-12-17'), end = as.Date('2022-12-23'))
    compare_ageSex(inpat, start = as.Date('2022-12-17'), end = as.Date('2022-12-23'))
+   .. [1] "t test for age: t = -15.57, p = 0.00"
+   .. [1] "chisquare test for sex: chi = 1.71, p = 0.19"
+   .. [1] "t test for age: t = -3.54, p = 0.00"
+   .. [1] "chisquare test for sex: chi = 1.62, p = 0.20"
 
 
-you will see:
+Analysis: patient characteris
+=============================================
+
+
+daily number of patient visit:
 .. code-block:: python
 
-   [1] "t test for age: t = -15.57, p = 0.00"
-   [1] "chisquare test for sex: chi = 1.71, p = 0.19"
-   [1] "t test for age: t = -3.54, p = 0.00"
-   [1] "chisquare test for sex: chi = 1.62, p = 0.20"
-
-
-
-
-
-.. code-block:: python
-
-   # assume interval is left closed and right open, modify to reduce confusing
-   df$infect_duration[df$infect_duration=='3～5天'] = '3~4天' 
-   df$infect_duration[df$infect_duration=='5~7天'] = '5~6天'
-   df$infect_duration[df$infect_duration=='7~10天'] = '7~9天'
-
-   df = df%>%mutate(infect_duration=ifelse(infect_duration%in%c('7~9天', '10天以上'), '>7 day', infect_duration))%>%
-      mutate(infect_duration=ifelse(infect_duration%in%c('', '小于3天'), '<3 day', infect_duration))%>%
-      mutate(infect_duration=gsub('天', ' day', infect_duration))%>%
-      mutate(infect_duration=gsub('~', '-', infect_duration))%>%
-      mutate(infect_duration=factor(infect_duration, levels=c('<3 day', '3-4 day', '5-6 day', '>7 day')))
-   get_prop(df, 'sex', 'infect_duration')
-   # trim fever_duration
-   df$fever_duration = sapply(df$fever_duration, function(x){strsplit(x, '[(]')[[1]][1]})
-   df = df%>%mutate(fever_duration=ifelse(is.na(fever_duration), 'no reply', fever_duration))%>%
-      mutate(fever_duration=gsub('天', ' day', fever_duration))%>%
-      mutate(fever_duration=ifelse(fever_duration%in%c('1 day', '<1 day'), '≤1 day', fever_duration))%>%
-      mutate(fever_duration=factor(fever_duration, levels=c('no reply', '≤1 day', '2 day', '3 day', '>3 day')))
-   get_prop(df, 'sex', 'fever_duration')
-
-
-Infect route:
-
-.. code-block:: python
-
-   df = df%>%mutate(
-      infectway_entertainment=factor(as.numeric(grepl('消费场所', infect_way))), 
-      infectway_work=factor(as.numeric(grepl('工作场所', infect_way))), 
-      infectway_family=factor(as.numeric(grepl('在家被家人传染', infect_way))), 
-      infectway_traffic=factor(as.numeric(grepl('公共交通', infect_way))), 
-      infectway_hosp=factor(as.numeric(grepl('医疗场所', infect_way))))
-   for (i in c('infectway_entertainment', 'infectway_work', 'infectway_family', 'infectway_traffic', 'infectway_hosp')){
-      print(i)
-      get_prop(df, 'sex', i)
+  get_nvisit_bygroup = function(df, date_col, group_col, dates, groups){
+      out = c()
+      for (day in dates){
+         sub = df[df[,date_col] == day, group_col]
+         for (group in groups){
+            if (group=='All'){num = length(sub)}
+            else if (group=='All COVID'){num = sum(sub%in%c('posi', 'contact_posi')); group='All'}
+            else if (group=='Other'){num = sum(!sub%in%groups)}
+            else if (group=='COVID-19 positive'){num = sum(sub=='posi')}
+            else if (group=='COVID-19 contact history'){num = sum(sub=='contact_posi')}
+            else {num = sum(sub==group)}
+            out = c(out, day, group, num)
+         }
+      }
+      nvisit = data.frame(matrix(out, ncol=3, byrow=T))%>%rename(DT=X1, group=X2, num=X3)%>%
+         mutate_if(is_numeric,as.numeric)%>%mutate(DT=as.Date(DT,origin="1970-01-01"))
+      return(nvisit)
    }
+
+   sort(table(outpat$DPT_NAME), decreasing=T)
+   sort(table(inpat$DPT_NAME), decreasing=T)
+
+   # nvist of patient
+   groups1 = c('All', 'Other', 'Emergency', 'Respiratory / Infectious')
+   groups2 = c('All COVID', 'COVID-19 positive', 'COVID-19 contact history')
+   groups3 = c('All', 'Other', 'Respiratory / Infectious')
+   nvisit_outpat = get_nvisit_bygroup(outpat, 'DT', 'DPT_NAME', days, groups1)
+   nposi_outpat = get_nvisit_bygroup(outpat, 'DT', 'epi', days, groups2)
+   nvisit_inpat = get_nvisit_bygroup(inpat, 'DT', 'DPT_NAME', days, groups3)
+
+
+daily number of healthcare provider on covid leave:
+.. code-block:: python
+
+   out = c()
+   for (day in days){
+      sub = staff%>%filter(start<=day&end>=day)
+      for (group in c('All', 'Doctor', 'Nurse', 'Technician', 'Other')){
+         if (group=='All'){n=nrow(sub)}else{n = sum(sub$group==group)}
+         out = c(out, day, group, n)
+      }
+   }
+   ncovid_staff = data.frame(matrix(out, ncol=3, byrow=T))%>%rename(DT=X1, group=X2, num=X3)%>%
+      mutate_if(is_numeric,as.numeric)%>%mutate(DT=as.Date(DT,origin="1970-01-01"))
+
+
+reshape data:
+.. code-block:: python
+   nvisit_outpat1 = reshape(nvisit_outpat, idvar = "DT", timevar = "group", direction = "wide")
+   nposi_outpat1 = reshape(nposi_outpat, idvar = "DT", timevar = "group", direction = "wide")
+   nvisit_inpat1 = reshape(nvisit_inpat, idvar = "DT", timevar = "group", direction = "wide")
+   ncovid_staff1 = reshape(ncovid_staff, idvar = "DT", timevar = "group", direction = "wide")
+   nvisit_outpat1%>%merge(nvisit_inpat1, 'DT', all.x=T)%>%merge(nposi_outpat1, 'DT', all.x=T)%>%merge(ncovid_staff1, 'DT', all.x=T)
+   # write.csv(temp, './temp.csv', quote=F, row.names=F)
+
+
+   t1 = ncovid_staff1%>%filter(DT>=as.Date('2022-12-10')&DT<as.Date('2022-12-23'))%>%pull(num.All)
+   t2 = nposi_outpat1%>%filter(DT>=as.Date('2022-12-10')&DT<as.Date('2022-12-23'))%>%pull(num.All)
+
+   cor.test(t1, t2)
 
 
 
