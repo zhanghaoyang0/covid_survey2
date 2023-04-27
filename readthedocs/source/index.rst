@@ -32,7 +32,7 @@ Meterological varaitions were also acquired.
 
 All personal information data are masked.
 
-You can download the data at `here <https://github.com/zhanghaoyang0/covid_survey2/blob/main/data/data.rdata>`.
+You can download the data at `here <https://github.com/zhanghaoyang0/covid_survey2/blob/main/data/data.rdata>`_.
 
 Note that the data is rdata. Please see our code about how to use it.  
 
@@ -671,7 +671,7 @@ Comments and feedbacks
 
 Feel free to contact me via zhanghaoyang0@hotmail.com.  
 
-You may star the project at https://github.com/zhanghaoyang0/covid_survey2.  
+You may star the project at `here https://github.com/zhanghaoyang0/covid_survey2`_.  
 
 .. image:: dogwithhat.png
    :width: 200
