@@ -1,7 +1,7 @@
 
 Overview of the study
 =============================================
-In Dec 2022, the COVID-19 restriction was end.
+In Dec 2022, the COVID-19 restrictions ended.
 
 People raised concerns about potential healthcare system overload due to surging case loads.
 
