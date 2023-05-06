@@ -64,6 +64,10 @@ compare_ageSex(inpat, start = as.Date('2022-12-17'), end = as.Date('2022-12-23')
 
 #====================================================================
 # nvist: data
+# n doc	326
+# n nurse 334
+# n technician 142
+# n other 300
 #====================================================================
 get_nvisit_bygroup = function(df, date_col, group_col, dates, groups){
     out = c()
@@ -192,17 +196,17 @@ get_propAfterDrop = function(df, levels){
     return(df2)
 }
 
-plot_prop = function(df, title, nrow_legend=2){
+plot_prop = function(df, title, lab_title, nrow_legend=2){
     p = ggplot(df, aes(x = policy, weight = prop, fill = group))+
         geom_bar(position = "stack") +
-        xlab('') + ylab('') + labs(fill = '') +
-        theme(plot.title = element_text(size = 12, hjust = 0.5),
+        xlab('') + ylab('') + 
+        theme(plot.title = element_text(size = 10, hjust = 0.5),
             axis.text.y = element_text(color="black"), 
-            legend.position="none", legend.title=element_blank(),
-            legend.text = element_text(size = 8)) +
+            legend.text = element_text(size = 7),
+            legend.title = element_text(size = 7.5)) +
         ggtitle(title) +
         coord_flip() +
-        guides(fill=guide_legend(title="", nrow = nrow_legend)) + # legend row
+        guides(fill=guide_legend(title=lab_title, nrow = nrow_legend)) + # legend row
         scale_fill_nejm()
     return(p)
 }
@@ -228,20 +232,20 @@ inpat4 = get_propAfterDrop(inpat1, levels2)
 
 # group with levels1
 plots  = list()
-plots[[1]] = plot_prop(outpat3, 'Proportion of Main Respiratory Diseases (Outpatient)', nrow_legend=3)
-plots[[2]] = plot_prop(inpat3, 'Proportion of Main Respiratory Diseases (Inpatient)', nrow_legend=3)
-plots[[3]] = plot_prop(outpat4, 'Proportion of Main Respiratory Diseases (Outpatient)', nrow_legend=5)
-plots[[4]] = plot_prop(inpat4, 'Proportion of Main Respiratory Diseases (Inpatient)', nrow_legend=5)
+plots[[1]] = plot_prop(outpat3, 'Outpatient', 'Main respiratory disease', nrow_legend=3)
+plots[[2]] = plot_prop(inpat3, 'Inpatient', 'Main respiratory disease', nrow_legend=3)
+plots[[3]] = plot_prop(outpat4, 'Outpatient', 'Main non-respiratory disease', nrow_legend=5)
+plots[[4]] = plot_prop(inpat4, 'Inpatient', 'Main non-respiratory disease', nrow_legend=5)
 
 p1 = ggarrange(plots[[1]], plots[[2]], hjust=0.1, vjust=0.1, ncol=1, nrow=2, common.legend=T, legend="right")
 p2 = ggarrange(plots[[3]], plots[[4]], hjust=0.1, vjust=0.1, ncol=1, nrow=2, common.legend=T, legend="right")
 
 
-png('./plot/dis_prop1.png',height=500, width=1000, res=150)
+png('./plot/dis_prop1.png',height=500, width=900, res=150)
 print(p1)
 dev.off()
 
-png('./plot/dis_prop2.png',height=500, width=1000, res=150)
+png('./plot/dis_prop2.png',height=500, width=900, res=150)
 print(p2)
 dev.off()
 
@@ -301,17 +305,17 @@ fee_prop = fee_prop%>%merge(map, 'group')%>%mutate(group=group_new)%>%select(-gr
 ## plot2: prop of cost, merge prop < 5% to other
 plots  = list()
 for (i in unique(fee_prop$dpt)){
-    title = ifelse(i=='Other', 'Proportion of Hospitalization Expenses on Respiratory / Infectious Diseases', 
-        'Proportion of Hospitalization Expenses on Other Diseases')
+    title = ifelse(i=='Other', 'Respiratory / Infectious Diseases', 
+        'Other Diseases')
     df_p1 = fee_prop%>%filter(dpt==i)
-    p = plot_prop(df_p1, title, nrow_legend=8)
+    p = plot_prop(df_p1, title, 'Hospitalization expense', nrow_legend=8)
     plots[[i]] = p 
 }
-p <- ggarrange(plots[[1]], plots[[2]], hjust=0.1, vjust=0.1, ncol=1, nrow=2, common.legend=T, legend="right")
+p = ggarrange(plots[[1]], plots[[2]], hjust=0.1, vjust=0.1, ncol=1, nrow=2, common.legend=T, legend="right")
 
 
 
-png('./plot/fee_prop.png',height=500, width=1500, res=150)
+png('./plot/fee_prop.png',height=500, width=1000, res=150)
 print(p)
 dev.off()
 
@@ -353,6 +357,7 @@ reg = data.frame(matrix(out, ncol=6, byrow=T)); names(reg) = c('dpt', 'col', 'me
 #====================================================================
 # work load
 #====================================================================
+
 cal_workload = function(df, col, name){
     tab = table(df[,col], df$policy)
     out = data.frame(cbind(name, rbind(cbind('Before', tab[,1]), cbind('After', tab[,2]))))

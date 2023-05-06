@@ -26,7 +26,7 @@ After policy adjustment:
 
 Data source and study population
 =============================================
-This study was conducted using EMR of affilicated children's hosptial of Jiangnan Universit, from Nov 2022 to Dec 2022.
+This study was conducted using EMR of affilicated children's hosptial of Jiangnan University, from Nov 2022 to Dec 2022.
 
 Meterological varaitions were also acquired.  
 
