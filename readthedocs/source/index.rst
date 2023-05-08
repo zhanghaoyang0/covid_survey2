@@ -14,7 +14,7 @@ We wrote a manuscript, our data and anaysis procedure are available at below.
 Adjustment of healthcare activity
 =============================================
 .. image:: fig1.png
-   :width: 600
+   :width: 800
    :align: center
 
 After policy adjustment:
@@ -277,9 +277,9 @@ Compare patient visit before and after policy adjustment:
    # 3  inpat Respiratory / Infectious 18.00 ± 3.82  15.86 ± 6.27  -3.57 ± 2.46 0.16
 
 .. image:: fig2.png
-   :width: 600
+   :width: 800
    :align: center
-   
+
 Plot time series:
 
 .. code-block:: python
@@ -513,7 +513,7 @@ Plot proportion of visiting reason:
    dev.off()
 
 .. image:: fig4.png
-   :width: 600
+   :width: 800
    :align: center
 
 Plot proportion of hosptialization fee:
