@@ -162,13 +162,6 @@ Compare:
 
 Time series of hosptial activity
 =============================================
-.. image:: fig2.png
-   :width: 600
-   :align: center
-
-.. image:: fig3.png
-   :width: 600
-   :align: center
 
 Patient visit:
 
@@ -283,7 +276,10 @@ Compare patient visit before and after policy adjustment:
    # 2  inpat                    Other 48.57 ± 5.02 25.14 ± 11.94 -22.46 ± 4.45 0.00
    # 3  inpat Respiratory / Infectious 18.00 ± 3.82  15.86 ± 6.27  -3.57 ± 2.46 0.16
 
-
+.. image:: fig2.png
+   :width: 600
+   :align: center
+   
 Plot time series:
 
 .. code-block:: python
@@ -328,6 +324,10 @@ Plot time series:
    png('./plot/ts_nvist.png',height=900, width=1500, res=150)
    print(p)
    dev.off()
+
+.. image:: fig3.png
+   :width: 800
+   :align: center
 
 
 Plot predicted patient visit:
@@ -378,13 +378,6 @@ Plot predicted patient visit:
 
 Visiting reason and hospitalization fee
 =============================================
-.. image:: fig4.png
-   :width: 600
-   :align: center
-
-.. image:: fig5.png
-   :width: 600
-   :align: center
 
 Proportion of disease:
 
@@ -518,6 +511,10 @@ Plot proportion of visiting reason:
    png('./plot/dis_prop2.png',height=500, width=900, res=150)
    print(p2)
    dev.off()
+
+.. image:: fig4.png
+   :width: 600
+   :align: center
 
 Plot proportion of hosptialization fee:
 
@@ -661,6 +658,10 @@ Compare hosptialization fee and length:
    # 14 Respiratory / Infectious   hosp_day         5.70 ± 1.72       4.90 ± 1.55       -0.77 ± 0.15 0.00
    # 15                    Other TOTAL_COST 10570.87 ± 13496.95 9862.44 ± 9658.38  -678.49 ± 1248.97 0.59
    # 16                    Other   hosp_day         5.93 ± 4.48       5.30 ± 3.40       -0.62 ± 0.42 0.14
+
+.. image:: fig5.png
+   :width: 800
+   :align: center
 
 Plot predicted hosptialization fee:
 
