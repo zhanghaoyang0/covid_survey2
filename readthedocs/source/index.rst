@@ -166,6 +166,10 @@ Time series of hosptial activity
    :width: 600
    :align: center
 
+.. image:: fig3.png
+   :width: 600
+   :align: center
+
 Patient visit:
 
 .. code-block:: python
@@ -326,10 +330,59 @@ Plot time series:
    dev.off()
 
 
+Plot predicted patient visit:
+
+.. code-block:: python
+   
+   lm_predict_nvist = function(df, group){
+      df1 = filter_period(df)%>%filter(group==UQ(group))%>%
+         mutate(holiday=ifelse(weekdays(DT)%in%c('Saturday', 'Sunday'), 1, 0))%>%
+         merge(weather%>%select(temp_ave, humi_ave, DT), by='DT')
+      df2 = df1%>%filter(policy=='Before'); df3 = df1%>%filter(policy=='After')
+      reg = lm(num~temp_ave+humi_ave+holiday, df2)
+      df3 = df3%>%mutate(num = predict(reg, newdata=df3))
+      sub1 = df1%>%select(DT, num)%>%mutate(group='Actual')
+      sub2 = df3%>%select(DT, num)%>%mutate(group='Predicted')
+      df_p = rbind(sub1, sub2)
+      return(df_p)
+   }
+
+   ylab1 = 'Number of outpatients \n (All)'
+   ylab2 = 'Number of outpatients \n (Emergency)'
+   ylab3 = 'Number of outpatients \n (Respiratory / Infectious)'
+   ylab4 = 'Number of inpatients \n (All)'
+   ylab5 = 'Number of inpatients \n (Respiratory / Infectious)'
+
+
+   nvisit_outpat1 = lm_predict_nvist(nvisit_outpat, 'All')
+   nvisit_outpat2 = lm_predict_nvist(nvisit_outpat, 'Emergency')
+   nvisit_outpat3 = lm_predict_nvist(nvisit_outpat, 'Respiratory / Infectious')
+   nvisit_outpat4 = lm_predict_nvist(nvisit_inpat, 'All')
+   nvisit_outpat5 = lm_predict_nvist(nvisit_inpat, 'Respiratory / Infectious')
+
+   p1 = plot_nvist(nvisit_outpat1, c('Actual', 'Predicted'), ylab_text = ylab1, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-09')
+   p2 = plot_nvist(nvisit_outpat2, c('Actual', 'Predicted'), ylab_text = ylab2, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-09')
+   p3 = plot_nvist(nvisit_outpat3, c('Actual', 'Predicted'), ylab_text = ylab3, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-09')
+   p4 = plot_nvist(nvisit_outpat4, c('Actual', 'Predicted'), ylab_text = ylab4, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-09')
+   p5 = plot_nvist(nvisit_outpat5, c('Actual', 'Predicted'), ylab_text = ylab5, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-09')
+
+
+   p = ggarrange(p1, p4, p3, p5, p2, ncol=2, nrow=3, common.legend=F, align = "hv", hjust=0.1, vjust=0.1) +
+      theme(plot.margin = unit(c(0,0,0,0), "cm"))
+
+   png('./plot/pred_nvist.png',height=1200, width=1300, res=150)
+   print(p)
+   dev.off()
+
+
 
 Visiting reason and hospitalization fee
 =============================================
-.. image:: fig3.png
+.. image:: fig4.png
+   :width: 600
+   :align: center
+
+.. image:: fig5.png
    :width: 600
    :align: center
 
@@ -420,6 +473,68 @@ Compare visiting reason:
    #      Pearson's Chi-squared test
    # data:  DIS and policy
    # X-squared = 16.977, df = 2, p-value = 0.0002058
+
+Plot proportion of visiting reason:
+
+.. code-block:: python
+
+   plot_prop = function(df, title, lab_title, nrow_legend=2){
+      p = ggplot(df, aes(x = policy, weight = prop, fill = group))+
+         geom_bar(position = "stack") +
+         xlab('') + ylab('') + 
+         theme(plot.title = element_text(size = 10, hjust = 0.5),
+               axis.text.y = element_text(color="black"), 
+               legend.text = element_text(size = 7),
+               legend.title = element_text(size = 7.5)) +
+         ggtitle(title) +
+         coord_flip() +
+         guides(fill=guide_legend(title=lab_title, nrow = nrow_legend)) + # legend row
+         scale_fill_nejm()
+      return(p)
+   }
+
+   levels1 = c('Pneumonia', 'URTI','Bronchitis')
+   levels2 = c('Neonatal','Allergic','Oral','Ophthalmology','Neuropsychiatric')
+   outpat3 = get_propAfterDrop(outpat1, levels1)
+   inpat3 = get_propAfterDrop(inpat1, levels1)
+   outpat4 = get_propAfterDrop(outpat1, levels2)
+   inpat4 = get_propAfterDrop(inpat1, levels2)
+
+   # group with levels1
+   plots  = list()
+   plots[[1]] = plot_prop(outpat3, 'Outpatient', 'Main respiratory disease', nrow_legend=3)
+   plots[[2]] = plot_prop(inpat3, 'Inpatient', 'Main respiratory disease', nrow_legend=3)
+   plots[[3]] = plot_prop(outpat4, 'Outpatient', 'Main non-respiratory disease', nrow_legend=5)
+   plots[[4]] = plot_prop(inpat4, 'Inpatient', 'Main non-respiratory disease', nrow_legend=5)
+
+   p1 = ggarrange(plots[[1]], plots[[2]], hjust=0.1, vjust=0.1, ncol=1, nrow=2, common.legend=T, legend="right")
+   p2 = ggarrange(plots[[3]], plots[[4]], hjust=0.1, vjust=0.1, ncol=1, nrow=2, common.legend=T, legend="right")
+
+
+   png('./plot/dis_prop1.png',height=500, width=900, res=150)
+   print(p1)
+   dev.off()
+
+   png('./plot/dis_prop2.png',height=500, width=900, res=150)
+   print(p2)
+   dev.off()
+
+Plot proportion of hosptialization fee:
+
+.. code-block:: python
+
+   plots  = list()
+   for (i in unique(fee_prop$dpt)){
+      title = ifelse(i=='Other', 'Respiratory / Infectious Diseases', 
+         'Other Diseases')
+      df_p1 = fee_prop%>%filter(dpt==i)
+      p = plot_prop(df_p1, title, 'Hospitalization expense', nrow_legend=8)
+      plots[[i]] = p 
+   }
+   p = ggarrange(plots[[1]], plots[[2]], hjust=0.1, vjust=0.1, ncol=1, nrow=2, common.legend=T, legend="right")
+   png('./plot/fee_prop.png',height=500, width=1000, res=150)
+   print(p)
+   dev.off()
 
 Measure hosptialization fee:
 
@@ -547,70 +662,53 @@ Compare hosptialization fee and length:
    # 15                    Other TOTAL_COST 10570.87 ± 13496.95 9862.44 ± 9658.38  -678.49 ± 1248.97 0.59
    # 16                    Other   hosp_day         5.93 ± 4.48       5.30 ± 3.40       -0.62 ± 0.42 0.14
 
-Plot proportion of visiting reason:
+Plot predicted hosptialization fee:
 
 .. code-block:: python
 
-   plot_prop = function(df, title, lab_title, nrow_legend=2){
-      p = ggplot(df, aes(x = policy, weight = prop, fill = group))+
-         geom_bar(position = "stack") +
-         xlab('') + ylab('') + 
-         theme(plot.title = element_text(size = 10, hjust = 0.5),
-               axis.text.y = element_text(color="black"), 
-               legend.text = element_text(size = 7),
-               legend.title = element_text(size = 7.5)) +
-         ggtitle(title) +
-         coord_flip() +
-         guides(fill=guide_legend(title=lab_title, nrow = nrow_legend)) + # legend row
+   lm_predict_cost = function(df, group){
+      if (group=='All clinical department'){df1 = df}else{df1 = df%>%filter(DPT_NAME==UQ(group))}
+      df2 = df1%>%filter(policy=='Before'); df3 = df1%>%filter(policy=='After')
+      reg = lm(TOTAL_COST~age+SEX+hosp_day, df2)
+      df3 = df3%>%mutate(TOTAL_COST = predict(reg, newdata=df3))
+      sub1 = df1%>%select(DT, TOTAL_COST)%>%mutate(group='Actual')
+      sub2 = df3%>%select(DT, TOTAL_COST)%>%mutate(group='Predicted')
+      sub3 = data.frame(DT=as.Date('2022-12-24'), TOTAL_COST=NA, group='Actual') # add empty 12-24
+      df_p = rbind(sub1, sub2, sub3)
+      return(df_p)
+   }
+   plot_fee = function(df_p, ylab_text, legend_pos, y_inflat=1, x_text='12-10'){
+      df_p$DT = as.factor(format(as.Date(df_p$DT), format = "%m-%d"))
+      ymax = ceiling(median(df_p$TOTAL_COST, na.rm=T)/100)*y_inflat*100
+      df_text = data.frame(DT=x_text, TOTAL_COST=ymax*0.95, group='Actual')
+      p = ggplot(df_p, aes(x = DT, y = TOTAL_COST, fill=group)) + 
+         geom_boxplot(outlier.color = NA) +
+         ylim(0, ymax) +
+         scale_x_discrete(breaks = c('11-26', '12-03', '12-10', '12-17', '12-24')) +
+         geom_vline(xintercept='12-10', linetype='dashed', color='gray', size=1) + 
+         geom_text(data=df_text, label=" Policy \n adjustment", vjust=0.5, hjust=0.3, size=3.5) +
+         ylab(ylab_text) + xlab('') +
+         theme_bw() +
+         theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, color="black"), 
+               axis.title.y = element_text(size = 10), 
+               panel.grid.major=element_blank(),panel.grid.minor=element_blank(), # remove grid
+               legend.title=element_blank(), legend.position = c(legend_pos[1], legend_pos[2])) +
          scale_fill_nejm()
       return(p)
    }
-
-   levels1 = c('Pneumonia', 'URTI','Bronchitis')
-   levels2 = c('Neonatal','Allergic','Oral','Ophthalmology','Neuropsychiatric')
-   outpat3 = get_propAfterDrop(outpat1, levels1)
-   inpat3 = get_propAfterDrop(inpat1, levels1)
-   outpat4 = get_propAfterDrop(outpat1, levels2)
-   inpat4 = get_propAfterDrop(inpat1, levels2)
-
-   # group with levels1
-   plots  = list()
-   plots[[1]] = plot_prop(outpat3, 'Outpatient', 'Main respiratory disease', nrow_legend=3)
-   plots[[2]] = plot_prop(inpat3, 'Inpatient', 'Main respiratory disease', nrow_legend=3)
-   plots[[3]] = plot_prop(outpat4, 'Outpatient', 'Main non-respiratory disease', nrow_legend=5)
-   plots[[4]] = plot_prop(inpat4, 'Inpatient', 'Main non-respiratory disease', nrow_legend=5)
-
-   p1 = ggarrange(plots[[1]], plots[[2]], hjust=0.1, vjust=0.1, ncol=1, nrow=2, common.legend=T, legend="right")
-   p2 = ggarrange(plots[[3]], plots[[4]], hjust=0.1, vjust=0.1, ncol=1, nrow=2, common.legend=T, legend="right")
-
-
-   png('./plot/dis_prop1.png',height=500, width=900, res=150)
-   print(p1)
-   dev.off()
-
-   png('./plot/dis_prop2.png',height=500, width=900, res=150)
-   print(p2)
-   dev.off()
-
-
-
-Plot proportion of hosptialization fee:
-
-.. code-block:: python
-
-   plots  = list()
-   for (i in unique(fee_prop$dpt)){
-      title = ifelse(i=='Other', 'Respiratory / Infectious Diseases', 
-         'Other Diseases')
-      df_p1 = fee_prop%>%filter(dpt==i)
-      p = plot_prop(df_p1, title, 'Hospitalization expense', nrow_legend=8)
-      plots[[i]] = p 
-   }
-   p = ggarrange(plots[[1]], plots[[2]], hjust=0.1, vjust=0.1, ncol=1, nrow=2, common.legend=T, legend="right")
-   png('./plot/fee_prop.png',height=500, width=1000, res=150)
+   sort(table(inpat1$DPT_NAME), decreasing=T)
+   group1 = 'All clinical department'
+   group2 = 'Respiratory / Infectious'
+   ylab1 = sprintf('Hospitalization expense \n %s', group1)
+   ylab2 = sprintf('Hospitalization expense \n %s', group2)
+   fee1 = lm_predict_cost(inpat1, group1)
+   fee2 = lm_predict_cost(inpat1, group2)
+   p1 = plot_fee(fee1, ylab_text = ylab1, legend_pos=c(0.1, 0.8), y_inflat=5)
+   p2 = plot_fee(fee2, ylab_text = ylab2, legend_pos=c(0.1, 0.8), y_inflat=3.5)
+   p = ggarrange(p1, p2, ncol=1, nrow=2, common.legend=F, align = "hv", hjust=0.1, vjust=0.1)
+   png('./plot/pred_fee.png',height=1000, width=1400, res=150)
    print(p)
    dev.off()
-
 
 
 Workload of healthcare provider

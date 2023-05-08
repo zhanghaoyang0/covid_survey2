@@ -126,16 +126,17 @@ cor.test(t1, t2)
 #====================================================================
 # nvist: plot
 #====================================================================
-plot_nvist = function(df, groups, ylab_text, legend_pos, legend_col, re_level = F, y_inflat=1){
+plot_nvist = function(df, groups, ylab_text, legend_pos, legend_col=1, re_level = F, y_inflat=1, x_text='2022-12-07'){
     df_p = df%>%filter(group%in%groups)
     if (re_level == T){df_p$group = factor(df_p$group, levels = groups)} # level group as groups
     ymax = ceiling(max(df_p$num)/100)*y_inflat*100
-    df_text = df_p%>%filter(day==as.Date('2022-12-07'))%>%filter(num==max(num))%>%unique()%>%mutate(num=ymax*0.9)
+    df_text = df_p%>%filter(DT==as.Date(x_text))%>%filter(num==max(num))%>%mutate(num=ymax*0.9)
+    df_text = df_text[1,]
     days1 = seq(as.Date("2022-11-05"), as.Date("2022-12-31"), by = "1 week")
     p = ggplot(df_p, aes(x=DT, y=num, group=group)) +
         geom_point(aes(color=group)) + geom_line(aes(color=group)) + 
         geom_vline(xintercept=as.Date('2022-12-10'), linetype='dashed', color='gray', size=1) +      
-        labs(x=("Date"), y=("Number")) + ylim(0, ymax) + 
+        ylim(0, ymax) + 
         scale_x_date(breaks = days1, date_labels = "%m-%d") +
         geom_text(data=df_text, label=" Policy \n adjustment", vjust=0.5, hjust=0.3, size=3.5) +
         ylab(ylab_text) + xlab('') +
@@ -149,19 +150,20 @@ plot_nvist = function(df, groups, ylab_text, legend_pos, legend_col, re_level = 
     return(p)
 }
 
-ylab1 = 'Number of patients with COVID-19 \n or COVID-19 contact history'
-ylab2 = 'Number of Healthcare Providers'
-ylab3 = 'Number of outpatients'
-ylab4 = 'Number of inpatients'
 
-p1 = plot_nvist(nposi_outpat, c('All', 'COVID-19 positive', 'COVID-19 contact history'), 
-    ylab_text=ylab1, legend_pos=c(0.25, 0.77), legend_col=1, y_inflat=1.2)
-p2 = plot_nvist(ncovid_staff, c('All', 'Doctor', 'Nurse', 'Technician', 'Other'), 
-    ylab_text=ylab2, legend_pos=c(0.17, 0.67), legend_col=1, re_level=T, y_inflat=1.5)
-p3 = plot_nvist(nvisit_outpat, c('All', 'Other', 'Respiratory / Infectious', 'Emergency'), 
-    ylab_text=ylab3, legend_pos=c(0.25, 0.73), legend_col=1, re_level=T, y_inflat=2.4)
-p4 = plot_nvist(nvisit_inpat, c('All', 'Other', 'Respiratory / Infectious'), 
-    ylab_text=ylab4, legend_pos=c(0.25, 0.78), legend_col=1, y_inflat=1.65)
+ylab1 = 'Number of outpatients'
+ylab2 = 'Number of inpatients'
+ylab3 = 'Number of patients with COVID-19 \n or COVID-19 contact history'
+ylab4 = 'Number of Healthcare Providers'
+
+p1 = plot_nvist(nvisit_outpat, c('All', 'Other', 'Respiratory / Infectious', 'Emergency'), 
+    ylab_text=ylab1, legend_pos=c(0.25, 0.73), re_level=T, y_inflat=2.4)
+p2 = plot_nvist(nvisit_inpat, c('All', 'Other', 'Respiratory / Infectious'), 
+    ylab_text=ylab2, legend_pos=c(0.25, 0.78), y_inflat=1.65)
+p3 = plot_nvist(nposi_outpat, c('All', 'COVID-19 positive', 'COVID-19 contact history'), 
+    ylab_text=ylab3, legend_pos=c(0.25, 0.77), y_inflat=1.2)
+p4 = plot_nvist(ncovid_staff, c('All', 'Doctor', 'Nurse', 'Technician', 'Other'), 
+    ylab_text=ylab4, legend_pos=c(0.17, 0.67), re_level=T, y_inflat=1.5)
 
 p = ggarrange(p1, p2, p3, p4, ncol=2, nrow=2, common.legend=F, align = "hv", hjust=0.1, vjust=0.1) +
     theme(plot.margin = unit(c(0,0,0,0), "cm"))
@@ -426,3 +428,105 @@ temp2 = compare_nvist(nvisit_outpat1, 'outpat')
 temp = rbind(temp1, temp2)
 
 # write.csv(temp, './temp.csv', quote=F, row.names=F)
+
+
+#====================================================================
+# predict nvist
+#====================================================================
+lm_predict_nvist = function(df, group){
+    df1 = filter_period(df)%>%filter(group==UQ(group))%>%
+        mutate(holiday=ifelse(weekdays(DT)%in%c('Saturday', 'Sunday'), 1, 0))%>%
+        merge(weather%>%select(temp_ave, humi_ave, DT), by='DT')
+    df2 = df1%>%filter(policy=='Before'); df3 = df1%>%filter(policy=='After')
+    reg = lm(num~temp_ave+humi_ave+holiday, df2)
+    df3 = df3%>%mutate(num = predict(reg, newdata=df3))
+    sub1 = df1%>%select(DT, num)%>%mutate(group='Actual')
+    sub2 = df3%>%select(DT, num)%>%mutate(group='Predicted')
+    df_p = rbind(sub1, sub2)
+    return(df_p)
+}
+
+ylab1 = 'Number of outpatients \n (All)'
+ylab2 = 'Number of outpatients \n (Emergency)'
+ylab3 = 'Number of outpatients \n (Respiratory / Infectious)'
+ylab4 = 'Number of inpatients \n (All)'
+ylab5 = 'Number of inpatients \n (Respiratory / Infectious)'
+
+
+nvisit_outpat1 = lm_predict_nvist(nvisit_outpat, 'All')
+nvisit_outpat2 = lm_predict_nvist(nvisit_outpat, 'Emergency')
+nvisit_outpat3 = lm_predict_nvist(nvisit_outpat, 'Respiratory / Infectious')
+nvisit_outpat4 = lm_predict_nvist(nvisit_inpat, 'All')
+nvisit_outpat5 = lm_predict_nvist(nvisit_inpat, 'Respiratory / Infectious')
+
+p1 = plot_nvist(nvisit_outpat1, c('Actual', 'Predicted'), ylab_text = ylab1, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-09')
+p2 = plot_nvist(nvisit_outpat2, c('Actual', 'Predicted'), ylab_text = ylab2, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-09')
+p3 = plot_nvist(nvisit_outpat3, c('Actual', 'Predicted'), ylab_text = ylab3, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-09')
+p4 = plot_nvist(nvisit_outpat4, c('Actual', 'Predicted'), ylab_text = ylab4, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-09')
+p5 = plot_nvist(nvisit_outpat5, c('Actual', 'Predicted'), ylab_text = ylab5, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-09')
+
+
+p = ggarrange(p1, p4, p3, p5, p2, ncol=2, nrow=3, common.legend=F, align = "hv", hjust=0.1, vjust=0.1) +
+    theme(plot.margin = unit(c(0,0,0,0), "cm"))
+
+png('./plot/pred_nvist.png',height=1200, width=1300, res=150)
+print(p)
+dev.off()
+
+
+#====================================================================
+# predict fee
+#====================================================================
+lm_predict_cost = function(df, group){
+    if (group=='All clinical department'){df1 = df}else{df1 = df%>%filter(DPT_NAME==UQ(group))}
+    df2 = df1%>%filter(policy=='Before'); df3 = df1%>%filter(policy=='After')
+    reg = lm(TOTAL_COST~age+SEX+hosp_day, df2)
+    df3 = df3%>%mutate(TOTAL_COST = predict(reg, newdata=df3))
+    sub1 = df1%>%select(DT, TOTAL_COST)%>%mutate(group='Actual')
+    sub2 = df3%>%select(DT, TOTAL_COST)%>%mutate(group='Predicted')
+    sub3 = data.frame(DT=as.Date('2022-12-24'), TOTAL_COST=NA, group='Actual') # add empty 12-24
+    df_p = rbind(sub1, sub2, sub3)
+
+    return(df_p)
+}
+
+plot_fee = function(df_p, ylab_text, legend_pos, y_inflat=1, x_text='12-10'){
+    df_p$DT = as.factor(format(as.Date(df_p$DT), format = "%m-%d"))
+    ymax = ceiling(median(df_p$TOTAL_COST, na.rm=T)/100)*y_inflat*100
+    df_text = data.frame(DT=x_text, TOTAL_COST=ymax*0.95, group='Actual')
+    p = ggplot(df_p, aes(x = DT, y = TOTAL_COST, fill=group)) + 
+        geom_boxplot(outlier.color = NA) +
+        ylim(0, ymax) +
+        scale_x_discrete(breaks = c('11-26', '12-03', '12-10', '12-17', '12-24')) +
+        geom_vline(xintercept='12-10', linetype='dashed', color='gray', size=1) + 
+        geom_text(data=df_text, label=" Policy \n adjustment", vjust=0.5, hjust=0.3, size=3.5) +
+        ylab(ylab_text) + xlab('') +
+        theme_bw() +
+        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, color="black"), 
+            axis.title.y = element_text(size = 10), 
+            panel.grid.major=element_blank(),panel.grid.minor=element_blank(), # remove grid
+            legend.title=element_blank(), legend.position = c(legend_pos[1], legend_pos[2])) +
+        scale_fill_nejm()
+    return(p)
+}
+
+sort(table(inpat1$DPT_NAME), decreasing=T)
+
+group1 = 'All clinical department'
+group2 = 'Respiratory / Infectious'
+
+ylab1 = sprintf('Hospitalization expense \n %s', group1)
+ylab2 = sprintf('Hospitalization expense \n %s', group2)
+
+fee1 = lm_predict_cost(inpat1, group1)
+fee2 = lm_predict_cost(inpat1, group2)
+
+p1 = plot_fee(fee1, ylab_text = ylab1, legend_pos=c(0.1, 0.8), y_inflat=5)
+p2 = plot_fee(fee2, ylab_text = ylab2, legend_pos=c(0.1, 0.8), y_inflat=3.5)
+
+p = ggarrange(p1, p2, ncol=1, nrow=2, common.legend=F, align = "hv", hjust=0.1, vjust=0.1)
+
+png('./plot/pred_fee.png',height=1000, width=1400, res=150)
+print(p)
+dev.off()
+
