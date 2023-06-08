@@ -22,6 +22,7 @@ filter_period = function(df, nweek=2){
 
 outpat1 = filter_period(outpat)
 inpat1 = filter_period(inpat)
+
 #====================================================================
 # vist: characteristics
 #====================================================================
@@ -43,14 +44,19 @@ des_popChara = function(df){
     return(out)
 }
 
-compare_ageSex = function(df, start, end){
-    sub = df%>%filter(DT>=as.Date('2022-11-26')&DT<as.Date('2022-12-23'))
-    sub1 = sub%>%mutate(group = ifelse(DT>=start&DT<end, 1, 2))
-    t = t.test(sub1%>%filter(group==1)%>%pull(age), sub1%>%filter(group==2)%>%pull(age))
-    chi = chisq.test(sub1$SEX, sub1$group)
-    print(sprintf('t test for age: t = %.2f, p = %.2f', t$statistic, t$p.value))
+compare_sex = function(df){
+    chi = chisq.test(df$SEX, df$policy)
     print(sprintf('chisquare test for sex: chi = %.2f, p = %.2f', chi$statistic, chi$p.value))
 }
+
+compare_age = function(df, test_range){
+    start = test_range[1]; end = test_range[2]
+    x1 = df%>%filter(DT<adjust_day)%>%select(age)
+    x2 = df%>%filter(DT>=start&DT<end)%>%select(age)
+    t = t.test(x1, x2)
+    print(sprintf('t test for age: t = %.2f, p = %.2f', t$statistic, t$p.value))
+}
+
 
 des_popChara(outpat)
 des_popChara(inpat)
@@ -59,8 +65,9 @@ des_popChara(inpat)
 # temp = des_popChara(inpat)
 # write.csv(temp, './temp.csv', quote=F, row.names=F)
 
-compare_ageSex(outpat, start = as.Date('2022-12-17'), end = as.Date('2022-12-23'))
-compare_ageSex(inpat, start = as.Date('2022-12-17'), end = as.Date('2022-12-23'))
+compare_sex(outpat1); compare_sex(inpat1)
+compare_age(outpat1, test_range = c(as.Date('2022-12-15'), as.Date('2022-12-29')))
+compare_age(inpat1, test_range = c(as.Date('2022-12-15'), as.Date('2022-12-29')))
 
 #====================================================================
 # nvist: data
@@ -118,8 +125,8 @@ ncovid_staff1 = reshape(ncovid_staff, idvar = "DT", timevar = "group", direction
 temp = nvisit_outpat1%>%merge(nvisit_inpat1, 'DT', all.x=T)%>%merge(nposi_outpat1, 'DT', all.x=T)%>%merge(ncovid_staff1, 'DT', all.x=T)
 # write.csv(temp, './temp.csv', quote=F, row.names=F)
 
-t1 = ncovid_staff1%>%filter(DT>=as.Date('2022-12-10')&DT<as.Date('2022-12-23'))%>%pull(num.All)
-t2 = nposi_outpat1%>%filter(DT>=as.Date('2022-12-10')&DT<as.Date('2022-12-23'))%>%pull(num.All)
+t1 = ncovid_staff1%>%filter(DT>=as.Date('2022-12-15')&DT<as.Date('2022-12-29'))%>%pull(num.All)
+t2 = nposi_outpat1%>%filter(DT>=as.Date('2022-12-15')&DT<as.Date('2022-12-29'))%>%pull(num.All)
 
 cor.test(t1, t2)
 
@@ -132,24 +139,23 @@ plot_nvist = function(df, groups, ylab_text, legend_pos, legend_col=1, re_level 
     ymax = ceiling(max(df_p$num)/100)*y_inflat*100
     df_text = df_p%>%filter(DT==as.Date(x_text))%>%filter(num==max(num))%>%mutate(num=ymax*0.9)
     df_text = df_text[1,]
-    days1 = seq(as.Date("2022-11-05"), as.Date("2022-12-31"), by = "1 week")
+    days1 = seq(as.Date("2022-11-03"), as.Date("2022-12-29"), by = "1 week")
     p = ggplot(df_p, aes(x=DT, y=num, group=group)) +
         geom_point(aes(color=group)) + geom_line(aes(color=group)) + 
-        geom_vline(xintercept=as.Date('2022-12-10'), linetype='dashed', color='gray', size=1) +      
+        geom_vline(xintercept=as.Date('2022-12-15'), linetype='dashed', color='gray', size=1) +      
         ylim(0, ymax) + 
         scale_x_date(breaks = days1, date_labels = "%m-%d") +
         geom_text(data=df_text, label=" Policy \n adjustment", vjust=0.5, hjust=0.3, size=3.5) +
         ylab(ylab_text) + xlab('') +
         theme_bw() +
         theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, color="black"), 
-            axis.title.y = element_text(size = 10), 
-            panel.grid.major=element_blank(),panel.grid.minor=element_blank(), # remove grid
+            axis.title.y = element_text(size = 10), panel.grid.major=element_blank(), 
+            panel.grid.minor=element_blank(), # remove grid
             legend.title=element_blank(), legend.position = c(legend_pos[1], legend_pos[2])) +
         guides(color = guide_legend(ncol = legend_col)) + # legend row
         scale_color_manual(values = pal_npg('nrc')(5)) 
     return(p)
 }
-
 
 ylab1 = 'Number of outpatients'
 ylab2 = 'Number of inpatients'
@@ -168,19 +174,19 @@ p4 = plot_nvist(ncovid_staff, c('All', 'Doctor', 'Nurse', 'Technician', 'Other')
 p = ggarrange(p1, p2, p3, p4, ncol=2, nrow=2, common.legend=F, align = "hv", hjust=0.1, vjust=0.1) +
     theme(plot.margin = unit(c(0,0,0,0), "cm"))
 
-png('./plot/ts_nvist.png',height=900, width=1500, res=150)
-print(p)
-dev.off()
+# png('./plot/ts_nvist.png',height=900, width=1500, res=150)
+# print(p)
+# dev.off()
 
 #====================================================================
 # outpat inpat: dis prop
 #====================================================================
 ## data
-get_prop = function(df){
+get_prop = function(df, keep_dis){
     out = c()
     for (i in unique(df$policy)){
-        sub = df%>%filter(policy==i)
-        for (j in unique(sub$DIS)){
+        sub = df%>%filter(policy==i&DIS%in%keep_dis) 
+        for (j in keep_dis){
             n = sum(sub$DIS==j)
             prop = n/nrow(sub)
             out = c(out, i, j, n, prop)
@@ -191,12 +197,6 @@ get_prop = function(df){
     return(res)
 }
 
-get_propAfterDrop = function(df, levels){
-    df1 = df%>%filter(DIS%in%levels)
-    df2 = get_prop(df1)
-    df2 = df2%>%mutate(group=factor(group, levels=levels))
-    return(df2)
-}
 
 plot_prop = function(df, title, lab_title, nrow_legend=2){
     p = ggplot(df, aes(x = policy, weight = prop, fill = group))+
@@ -213,49 +213,46 @@ plot_prop = function(df, title, lab_title, nrow_legend=2){
     return(p)
 }
 
+keep1 = c('Pneumonia', 'URTI', 'Bronchitis', 'Other respiratory')
+keep2 = c('ENT', 'Dermatology', 'Healthcare', 'Ophthalmology', 'General surgery', 'Other')
+keep3 = c('Neurology', 'Neonatology', 'Nephropathy', 'Hematology', 'General surgery', 'Other')
 
+outpat2 = get_prop(outpat1, keep1); outpat2[outpat2=='Other respiratory'] = 'Other'
+inpat2 = get_prop(inpat1, keep1); inpat2[inpat2=='Other respiratory'] = 'Other'
+outpat3 = get_prop(outpat1, keep2)
+inpat3 = get_prop(inpat1, keep3)
 
-outpat2 = get_prop(outpat1)
-inpat2 = get_prop(inpat1)
-outpat3 = outpat2%>%mutate(prop1=sprintf('%.0f (%.2f%%)', n, prop*100))
-inpat3 = inpat2%>%mutate(prop1=sprintf('%.0f (%.2f%%)', n, prop*100))
-# write.csv(outpat3, './temp.csv', quote=F, row.names=F)
-# write.csv(inpat3, './temp.csv', quote=F, row.names=F)
-
-## plot: prop
-levels1 = c('Pneumonia', 'URTI','Bronchitis')
-levels2 = c('Neonatal','Allergic','Oral','Ophthalmology','Neuropsychiatric')
-outpat3 = get_propAfterDrop(outpat1, levels1)
-inpat3 = get_propAfterDrop(inpat1, levels1)
-outpat4 = get_propAfterDrop(outpat1, levels2)
-inpat4 = get_propAfterDrop(inpat1, levels2)
+temp = rbind(outpat2, inpat2, outpat3, inpat3)
+temp = temp%>%mutate(prop1=sprintf('%.0f (%.2f%%)', n, prop*100))
+# write.csv(temp, './temp.csv', quote=F, row.names=F)
 
 
 
 # group with levels1
 plots  = list()
-plots[[1]] = plot_prop(outpat3, 'Outpatient', 'Main respiratory disease', nrow_legend=3)
-plots[[2]] = plot_prop(inpat3, 'Inpatient', 'Main respiratory disease', nrow_legend=3)
-plots[[3]] = plot_prop(outpat4, 'Outpatient', 'Main non-respiratory disease', nrow_legend=5)
-plots[[4]] = plot_prop(inpat4, 'Inpatient', 'Main non-respiratory disease', nrow_legend=5)
+plots[[1]] = plot_prop(outpat2, 'Respiratory disease(outpatient)', 'Disease', nrow_legend=4)
+plots[[2]] = plot_prop(inpat2, 'Respiratory disease(inpatient)', 'Disease', nrow_legend=4)
+plots[[3]] = plot_prop(outpat3, 'Non-respiratory disease(outpatient)', 'Disease', nrow_legend=6)
+plots[[4]] = plot_prop(inpat3, 'Non-respiratory disease(inpatient)', 'Disease', nrow_legend=6)
 
-p1 = ggarrange(plots[[1]], plots[[2]], hjust=0.1, vjust=0.1, ncol=1, nrow=2, common.legend=T, legend="right")
-p2 = ggarrange(plots[[3]], plots[[4]], hjust=0.1, vjust=0.1, ncol=1, nrow=2, common.legend=T, legend="right")
+p = ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], hjust=0.1, vjust=0.1, ncol=2, nrow=2, common.legend=F, legend="right")
 
-
-png('./plot/dis_prop1.png',height=500, width=900, res=150)
-print(p1)
+png('./plot/dis_prop1.png',height=700, width=1400, res=150)
+p
 dev.off()
 
-png('./plot/dis_prop2.png',height=500, width=900, res=150)
-print(p2)
-dev.off()
+
 
 # chisquare
-sub1 = outpat1%>%filter(DIS%in%c('Bronchitis', 'URTI', 'Pneumonia'))
-sub2 = inpat1%>%filter(DIS%in%c('Bronchitis', 'URTI', 'Pneumonia'))
+sub1 = outpat1%>%filter(DIS%in%keep1)
+sub2 = inpat1%>%filter(DIS%in%keep1)
+sub3 = outpat1%>%filter(DIS%in%keep2)
+sub4 = inpat1%>%filter(DIS%in%keep3)
 with(sub1, chisq.test(DIS, policy))
 with(sub2, chisq.test(DIS, policy))
+with(sub3, chisq.test(DIS, policy))
+with(sub4, chisq.test(DIS, policy))
+
 
 
 
@@ -304,22 +301,22 @@ fee_prop = fee_prop%>%merge(map, 'group')%>%mutate(group=group_new)%>%select(-gr
 
 # write.csv(fee_prop, './temp.csv', quote=F, row.names=F)
 
-## plot2: prop of cost, merge prop < 5% to other
-plots  = list()
-for (i in unique(fee_prop$dpt)){
-    title = ifelse(i=='Other', 'Respiratory / Infectious Diseases', 
-        'Other Diseases')
-    df_p1 = fee_prop%>%filter(dpt==i)
-    p = plot_prop(df_p1, title, 'Hospitalization expense', nrow_legend=8)
-    plots[[i]] = p 
-}
-p = ggarrange(plots[[1]], plots[[2]], hjust=0.1, vjust=0.1, ncol=1, nrow=2, common.legend=T, legend="right")
+# ## plot2: prop of cost, merge prop < 5% to other
+# plots  = list()
+# for (i in unique(fee_prop$dpt)){
+#     title = ifelse(i=='Other', 'Respiratory / Infectious Diseases', 
+#         'Other Diseases')
+#     df_p1 = fee_prop%>%filter(dpt==i)
+#     p = plot_prop(df_p1, title, 'Hospitalization expense', nrow_legend=8)
+#     plots[[i]] = p 
+# }
+# p = ggarrange(plots[[1]], plots[[2]], hjust=0.1, vjust=0.1, ncol=1, nrow=2, common.legend=T, legend="right")
 
 
 
-png('./plot/fee_prop.png',height=500, width=1000, res=150)
-print(p)
-dev.off()
+# png('./plot/fee_prop.png',height=500, width=1000, res=150)
+# print(p)
+# dev.off()
 
 
 #====================================================================
@@ -357,19 +354,37 @@ reg = data.frame(matrix(out, ncol=6, byrow=T)); names(reg) = c('dpt', 'col', 'me
 # write.csv(reg, './temp.csv', quote=F, row.names=F)
 
 #====================================================================
-# work load
+# comapre work load
 #====================================================================
-
-cal_workload = function(df, col, name){
-    tab = table(df[,col], df$policy)
-    out = data.frame(cbind(name, rbind(cbind('Before', tab[,1]), cbind('After', tab[,2]))))
-    out = out%>%rename(policy=V2, n=V3)%>%mutate(n=as.numeric(n)/2)%>%filter(n>0) # divide length of period
+cal_workload = function(df, col){
+    tab = table(df[,col], df$DT)
+    out = data.frame(cbind(rbind(cbind('Before', tab[,1]), cbind('After', tab[,2]))))
+    out = out%>%rename(policy=X1, n=X2)%>%mutate(n=as.numeric(n)/14)%>%filter(n>0) # divide length of period
     row.names(out) = NULL
     return(out)
 }
 
-compare_workload = function(df, col, name){
-    out = cal_workload(df, col, name)
+
+cal_workload = function(df, col, name){
+    out = c()
+    for (day in unique(df$DT)){
+        df1 = df%>%filter(DT==day)
+        n = mean(table(df1[,col]))
+        out = c(out, n)
+    }
+    res = data.frame(DT=unique(df$DT), n=out)
+
+
+
+    tab = table(df[,col], df$policy)
+    out = data.frame(cbind(name, rbind(cbind('Before', tab[,1]), cbind('After', tab[,2]))))
+    out = out%>%rename(policy=V2, n=V3)%>%mutate(n=as.numeric(n)/14)%>%filter(n>0) # divide length of period
+    row.names(out) = NULL
+    return(out)
+}
+
+compare_workload = function(df, col){
+    out = cal_workload(df, col)
     n1 = out%>%filter(policy=='Before')%>%pull(n)
     n2 = out%>%filter(policy=='After')%>%pull(n)
     test = t.test(n1, n2)
@@ -386,18 +401,57 @@ for (dpt in dpts){
     if (dpt=='Respiratory / Infectious'){outpat2 = outpat1%>%filter(DPT_NAME==dpt); inpat2 = inpat1%>%filter(DPT_NAME==dpt)}
     if (dpt=='all'){outpat2 = outpat1; inpat2 = inpat1}
     if (dpt=='other'){outpat2 = outpat1%>%filter(DPT_NAME!='Respiratory / Infectious'); inpat2 = inpat1%>%filter(DPT_NAME!='Respiratory / Infectious')}
-    sub1 = compare_workload(outpat2, 'DOC_NAME', 'Doctor')
-    sub2 = compare_workload(inpat2, 'HPHY_NAME', 'Doctor')
-    sub3 = compare_workload(inpat2, 'OP_DOC_NAME', 'Surgery doctor')
-    sub4 = compare_workload(inpat2, 'PRIMARY_NUR', 'Nurse')
-    sub = data.frame(rbind(sub1, sub2, sub3, sub4))
+    sub1 = compare_workload(outpat2, 'DOC_NAME')
+    sub2 = compare_workload(inpat2, 'HPHY_NAME')
+    # sub3 = compare_workload(inpat2, 'OP_DOC_NAME') # drop this in paper, number are too small
+    sub4 = compare_workload(inpat2, 'PRIMARY_NUR')
+    sub = data.frame(rbind(sub1, sub2, sub4))
     sub = cbind(dpt, sub)
     compare = rbind(compare, sub)   
 }
-
-
-
 # write.csv(compare, './temp.csv', quote=F, row.names=F)
+
+#====================================================================
+# plot work load by day
+#====================================================================
+df_p = data.frame()
+for (dpt in dpts){
+    if (dpt=='Respiratory / Infectious'){outpat2 = outpat1%>%filter(DPT_NAME==dpt); inpat2 = inpat1%>%filter(DPT_NAME==dpt)}
+    if (dpt=='all'){outpat2 = outpat1; inpat2 = inpat1}
+    if (dpt=='other'){outpat2 = outpat1%>%filter(DPT_NAME!='Respiratory / Infectious'); inpat2 = inpat1%>%filter(DPT_NAME!='Respiratory / Infectious')}
+    x1 = colMeans(table(outpat2[, 'DOC_NAME'], outpat2$DT))
+    x2 = colMeans(table(inpat2[, 'HPHY_NAME'], inpat2$DT))
+    x3 = colMeans(table(inpat2[, 'PRIMARY_NUR'], inpat2$DT))
+    dpt1 = str_to_title(gsub(' ', '', dpt))
+    sub1 = data.frame(DT=names(x1), group=paste0('Doctor (', dpt1, ')'), num=x1, type='outpatient')
+    sub2 = data.frame(DT=names(x2), group=paste0('Doctor (', dpt1, ')'), num=x2, type='inpatient')
+    sub3 = data.frame(DT=names(x3), group=paste0('Doctor (', dpt1, ')'), num=x3, type='inpatient')
+    df_p = rbind(df_p, sub1, sub2, sub3)
+}
+df_p = df_p%>%mutate(DT=as.Date(DT))
+df_p1 = df_p%>%filter(type=='outpatient')
+df_p2 = df_p%>%filter(type=='inpatient')
+ylab1 = 'ttt'
+ylab2 = 'ttt'
+
+
+p2 = plot_nvist(df_p1, unique(df_p1$group), ylab_text=ylab1, legend_pos=c(0.2, 0.8), re_level=F, x_text='2022-12-08', y_inflat=0.05)
+
+png('./plot/test.png',height=500, width=1000, res=150)
+print(p)
+dev.off()
+
+
+ylab2 = 'Number of outpatients \n (Emergency)'
+ylab3 = 'Number of outpatients \n (Respiratory / Infectious)'
+ylab4 = 'Number of inpatients \n (All)'
+ylab5 = 'Number of inpatients \n (Respiratory / Infectious)'
+
+
+
+# p4 = plot_nvist(ncovid_staff, c('All', 'Doctor', 'Nurse', 'Technician', 'Other'), ylab_text=ylab4, legend_pos=c(0.17, 0.67), re_level=F, y_inflat=1.5)
+
+
 #====================================================================
 # nvist: analysis
 #====================================================================
@@ -429,7 +483,6 @@ temp = rbind(temp1, temp2)
 
 # write.csv(temp, './temp.csv', quote=F, row.names=F)
 
-
 #====================================================================
 # predict nvist
 #====================================================================
@@ -459,11 +512,11 @@ nvisit_outpat3 = lm_predict_nvist(nvisit_outpat, 'Respiratory / Infectious')
 nvisit_outpat4 = lm_predict_nvist(nvisit_inpat, 'All')
 nvisit_outpat5 = lm_predict_nvist(nvisit_inpat, 'Respiratory / Infectious')
 
-p1 = plot_nvist(nvisit_outpat1, c('Actual', 'Predicted'), ylab_text = ylab1, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-09')
-p2 = plot_nvist(nvisit_outpat2, c('Actual', 'Predicted'), ylab_text = ylab2, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-09')
-p3 = plot_nvist(nvisit_outpat3, c('Actual', 'Predicted'), ylab_text = ylab3, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-09')
-p4 = plot_nvist(nvisit_outpat4, c('Actual', 'Predicted'), ylab_text = ylab4, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-09')
-p5 = plot_nvist(nvisit_outpat5, c('Actual', 'Predicted'), ylab_text = ylab5, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-09')
+p1 = plot_nvist(nvisit_outpat1, c('Actual', 'Predicted'), ylab_text = ylab1, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-14')
+p2 = plot_nvist(nvisit_outpat2, c('Actual', 'Predicted'), ylab_text = ylab2, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-14')
+p3 = plot_nvist(nvisit_outpat3, c('Actual', 'Predicted'), ylab_text = ylab3, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-14')
+p4 = plot_nvist(nvisit_outpat4, c('Actual', 'Predicted'), ylab_text = ylab4, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-14')
+p5 = plot_nvist(nvisit_outpat5, c('Actual', 'Predicted'), ylab_text = ylab5, legend_pos=c(0.15, 0.80), y_inflat=2.4, x_text='2022-12-14')
 
 
 p = ggarrange(p1, p4, p3, p5, p2, ncol=2, nrow=3, common.legend=F, align = "hv", hjust=0.1, vjust=0.1) +
@@ -484,8 +537,8 @@ lm_predict_cost = function(df, group){
     df3 = df3%>%mutate(TOTAL_COST = predict(reg, newdata=df3))
     sub1 = df1%>%select(DT, TOTAL_COST)%>%mutate(group='Actual')
     sub2 = df3%>%select(DT, TOTAL_COST)%>%mutate(group='Predicted')
-    sub3 = data.frame(DT=as.Date('2022-12-24'), TOTAL_COST=NA, group='Actual') # add empty 12-24
-    df_p = rbind(sub1, sub2, sub3)
+    # sub3 = data.frame(DT=as.Date('2022-12-24'), TOTAL_COST=NA, group='Actual') # add empty 12-24
+    df_p = rbind(sub1, sub2)
 
     return(df_p)
 }
@@ -497,8 +550,8 @@ plot_fee = function(df_p, ylab_text, legend_pos, y_inflat=1, x_text='12-10'){
     p = ggplot(df_p, aes(x = DT, y = TOTAL_COST, fill=group)) + 
         geom_boxplot(outlier.color = NA) +
         ylim(0, ymax) +
-        scale_x_discrete(breaks = c('11-26', '12-03', '12-10', '12-17', '12-24')) +
-        geom_vline(xintercept='12-10', linetype='dashed', color='gray', size=1) + 
+        scale_x_discrete(breaks = c('12-01', '12-08', '12-15', '12-22', '12-29')) +
+        geom_vline(xintercept='12-15', linetype='dashed', color='gray', size=1) + 
         geom_text(data=df_text, label=" Policy \n adjustment", vjust=0.5, hjust=0.3, size=3.5) +
         ylab(ylab_text) + xlab('') +
         theme_bw() +
@@ -524,9 +577,14 @@ fee2 = lm_predict_cost(inpat1, group2)
 p1 = plot_fee(fee1, ylab_text = ylab1, legend_pos=c(0.1, 0.8), y_inflat=5)
 p2 = plot_fee(fee2, ylab_text = ylab2, legend_pos=c(0.1, 0.8), y_inflat=3.5)
 
-p = ggarrange(p1, p2, ncol=1, nrow=2, common.legend=F, align = "hv", hjust=0.1, vjust=0.1)
+p = ggarrange(p1, p2, ncol=1, nrow=2, common.legend=F, align = "v", hjust=0.1, vjust=0.1)
 
 png('./plot/pred_fee.png',height=1000, width=1400, res=150)
 print(p)
 dev.off()
 
+
+
+#====================================================================
+# test
+#====================================================================

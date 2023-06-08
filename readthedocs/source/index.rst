@@ -7,7 +7,7 @@ People raised concerns about potential healthcare system overload due to surging
 
 We performed this study to evaluate the impact on such a policy adjustment on pediatric healthcare services. 
 
-We wrote a manuscript, our data and anaysis procedure are available at below.
+We wrote a manuscript, our data and analysis procedure are available at below.
 
 
 
@@ -26,9 +26,9 @@ After policy adjustment:
 
 Data source and study population
 =============================================
-This study was conducted using EMR of affilicated children's hosptial of Jiangnan University, from Nov 2022 to Dec 2022.
+This study was conducted using EMR of affilicated children's hospital of Jiangnan University, from Nov 2022 to Dec 2022.
 
-Meterological varaitions were also acquired.  
+Meterological variations were also acquired.  
 
 All personal information data are masked.
 
@@ -160,7 +160,7 @@ Compare:
 
 
 
-Time series of hosptial activity
+Time series of hospital activity
 =============================================
 
 Patient visit:
@@ -516,7 +516,7 @@ Plot proportion of visiting reason:
    :width: 800
    :align: center
 
-Plot proportion of hosptialization fee:
+Plot proportion of hospitalization fee:
 
 .. code-block:: python
 
@@ -533,7 +533,7 @@ Plot proportion of hosptialization fee:
    print(p)
    dev.off()
 
-Measure hosptialization fee:
+Measure hosipitalization fee:
 
 .. code-block:: python
 
@@ -608,7 +608,7 @@ Measure hosptialization fee:
    # 31       Drug Before                    Other 1188.73±1985.41 0.148775042
    # 32       Drug Before Respiratory / Infectious   841.06±658.36 0.151301256
 
-Compare hosptialization fee and length:
+Compare hospitalization fee and length:
 
 .. code-block:: python
 
@@ -663,7 +663,7 @@ Compare hosptialization fee and length:
    :width: 800
    :align: center
 
-Plot predicted hosptialization fee:
+Plot predicted hospitalization fee:
 
 .. code-block:: python
 

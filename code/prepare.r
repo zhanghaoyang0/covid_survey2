@@ -7,7 +7,7 @@ options(stringsAsFactors=F)
 
 # study period
 days = seq(as.Date('2022/11/01'), by = "day", length.out = 61)
-adjust_day = as.Date('2022-12-10')
+adjust_day = as.Date('2022-12-15')
 
 # get items with matched pattern
 # e.g, get('a', c('a1', 'a', 'c'))
@@ -24,4 +24,4 @@ is_numeric <- function(x) {
 }
 
 # find col with all na
-not_all_na <- function(x) any(!is.na(x))
+not_all_na = function(x) any(!is.na(x))
